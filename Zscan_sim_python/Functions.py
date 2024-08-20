@@ -1,7 +1,7 @@
 
 import numpy as np
 
-def Create_Volumeetric_Data(PHI_m_alongZ,XX,YY,z_to_save,Npoints_Z_to_save, normalized):
+def Create_Volumetric_Data(PHI_m_alongZ, XX, YY, z_to_save, Npoints_Z_to_save, normalized):
     # Initialize the volumetric data arrays
     Nzs = PHI_m_alongZ.shape[2]
     VolData = np.zeros((XX.shape[0], XX.shape[1], Nzs))
@@ -289,3 +289,42 @@ def BPM_2D_LinearCrkNcolsn_for_freqProp_NL_varAlongZ(PHI_m,k,NDX,NDY,NDZ,DX,DY,D
             z_to_save = []
 
     return PHI_m, np.array(PHI_m_to_save), np.array(z_to_save)
+
+
+def Sellmeir_Fcy_Response(c, f):
+    """
+    Sellmeir equation for calculating the refractive index (n_omega)
+    for fused silica given the speed of light (c) and frequency (f).
+
+    Parameters:
+    c (float): Speed of light in m/s
+    f (float): Frequency in Hz
+
+    Returns:
+    n_omega (float): Refractive index at the given frequency
+    """
+
+    Omega = 2 * np.pi * f
+    Lambda = c / f
+    Lambda_in_Micras = Lambda * 1e6
+
+    # Sellmeir Equation coefficients for fused silica
+    B1 = 0.6961663
+    B2 = 0.4079426
+    B3 = 0.8974794
+
+    C1 = 0.0684043
+    C2 = 0.1162414
+    C3 = 9.896161
+
+    nsq = 1 + ((B1 * Lambda_in_Micras ** 2) / (Lambda_in_Micras ** 2 - C1 ** 2)) + \
+          ((B2 * Lambda_in_Micras ** 2) / (Lambda_in_Micras ** 2 - C2 ** 2)) + \
+          ((B3 * Lambda_in_Micras ** 2) / (Lambda_in_Micras ** 2 - C3 ** 2))
+
+    n_omega = np.sqrt(nsq)
+
+    return n_omega
+
+
+
+
