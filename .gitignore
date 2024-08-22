@@ -101,3 +101,6 @@ Zscan_sim_python/.idea/security.xml
 # System files
 .DS_Store
 Thumbs.db
+
+*.png
+*.avi

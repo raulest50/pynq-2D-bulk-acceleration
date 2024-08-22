@@ -1,7 +1,8 @@
 
 
 import numpy as np
-from Functions import Sellmeir_Fcy_Response, Create_Volumetric_Data, BPM_2D_Prop_NL_var_alongZ
+from Functions import Sellmeir_Fcy_Response, Create_Volumetric_Data,\
+    BPM_2D_Prop_NL_var_alongZ, Gaussian_BEAM_Solution_Saleh, Gaussian_BEAM_Solution_Saleh1D
 import time
 import cv2
 import matplotlib.pyplot as plt
@@ -162,7 +163,7 @@ plt.figure()
 plt.plot(RdAnaly * 1e6, np.abs(SourceX))
 plt.plot(RdAnaly * 1e6, np.abs(Eout_Analytic))
 plt.grid(True)
-plt.gca().set_fontsize(14)
+plt.rcParams.update({'font.size': 14})
 plt.legend(['input at z=0', 'output analytical'])
 plt.xlabel('x [\mu m]')
 plt.ylabel('E[p.u.]')
@@ -179,7 +180,7 @@ ax1.set_xlabel('x [\mu m]')
 ax1.set_ylabel('y [\mu m]')
 ax1.set_zlabel('E(x,y) [p.u.]')
 ax1.set_aspect('auto')
-plt.gca().set_fontsize(14)
+plt.rcParams.update({'font.size': 14})
 
 plt.subplot(222)
 plt.contour(XX * 1e6, YY * 1e6, np.abs(PHI_m0.T))
@@ -248,6 +249,8 @@ start_time = time.time()
 Tout = np.zeros(len(zSampleLocs))
 PHI_out_Numeric = np.zeros((NDX + 1, NDY + 1, len(Freq)), dtype=complex)
 
+AW0 = [E0_Amplitude]
+
 # Loop over each sample location
 for lzSample in range(len(zSampleLocs)):
 
@@ -300,9 +303,6 @@ for lzSample in range(len(zSampleLocs)):
 
     # Slice Interpolation
     XX3, YY3, ZZ3 = np.meshgrid(X, Y, z_to_save)
-    xslice = 0
-    yslice = 0
-    zslice = []
 
     fig = plt.figure(1245, figsize=(12, 8))
 
@@ -313,10 +313,10 @@ for lzSample in range(len(zSampleLocs)):
     plt.gca().invert_xaxis()
 
     plt.subplot(2, 3, (2, 5))
-    plt.contourf(XX3 * 1e6, YY3 * 1e6, VolData[:, :, 0], cmap='viridis')
+    # Use a 2D slice of VolData, XX3, and YY3
+    plt.contourf(XX3[:, :, 0] * 1e6, YY3[:, :, 0] * 1e6, VolData[:, :, 0], cmap='viridis')
     plt.xlabel('x [\mu m]')
     plt.ylabel('y [\mu m]')
-    plt.zlabel('z [cm]')
     plt.title(f'z sample {zSample * 1e2:.2f} [cm]')
 
     plt.subplot(2, 3, 3)
@@ -355,7 +355,7 @@ plt.plot(zSampleLocs * 1e2, Tout)
 plt.xlabel('Zscan Sample locs [cm]')
 plt.ylabel('Transmittance[p.u]')
 plt.grid(True)
-plt.gca().set_fontsize(14)
+plt.rcParams.update({'font.size': 14})
 plt.show()
 
 

@@ -2,25 +2,26 @@
 import numpy as np
 
 def Create_Volumetric_Data(PHI_m_alongZ, XX, YY, z_to_save, Npoints_Z_to_save, normalized):
-    # Initialize the volumetric data arrays
-    Nzs = PHI_m_alongZ.shape[2]
+    Nzs = min(PHI_m_alongZ.shape[2], len(z_to_save))  # Ensure Nzs does not exceed the size of z_to_save
     VolData = np.zeros((XX.shape[0], XX.shape[1], Nzs))
     zLL = np.zeros((XX.shape[0], XX.shape[1], Nzs))
 
     c_planes = 0
 
-    for i in range(Nzs):
-        # Coordinate along z, of the corresponding plane
+    for i in range(Nzs):  # Loop only for the available z_to_save indices
         cz = z_to_save[i]
         zLL[:, :, c_planes] = cz + np.zeros_like(XX)
 
-        max_c = np.max(np.abs(PHI_m_alongZ[:, :, i]))
+        phi_slice = PHI_m_alongZ[:, :, i]
+        if phi_slice.shape != (XX.shape[0], XX.shape[1]):
+            phi_slice = np.resize(phi_slice, (XX.shape[0], XX.shape[1]))
 
-        # Adding a new plane
+        max_c = np.max(np.abs(phi_slice))
+
         if normalized:
-            VolData[:, :, c_planes] = np.abs(PHI_m_alongZ[:, :, i]) / max_c
+            VolData[:, :, c_planes] = np.abs(phi_slice) / max_c
         else:
-            VolData[:, :, c_planes] = np.abs(PHI_m_alongZ[:, :, i])
+            VolData[:, :, c_planes] = np.abs(phi_slice)
 
         c_planes += 1
 
@@ -326,5 +327,55 @@ def Sellmeir_Fcy_Response(c, f):
     return n_omega
 
 
+def BPM_2D_Prop_NL_var_alongZ(PHI_m, k, NDX, NDY, NDZ, DX, DY, DZ, Npoints_Z_to_save, nalongZ, n2alongZ):
+    N_count_to_save = np.floor(NDZ / Npoints_Z_to_save)
+    c_count_to_save = 0
+
+    n0 = nalongZ[0]
+    n2 = n2alongZ[0]
+
+    PHI_m_auxNL_DZ_2 = PHI_m  # First NL term is calculated from the initial field
+    PHI_m_half = PHI_m  # First term is calculated from the initial field
+
+    # Propagating a first DZ/2
+    PHI_pm_DZ_2 = BPM_First_half(PHI_m_half, PHI_m_auxNL_DZ_2, k, n0, NDX, NDY, DX, DY, 0.5 * DZ, n2)
+    PHI_m_half = BPM_Second_half(PHI_pm_DZ_2, PHI_m_auxNL_DZ_2, k, n0, NDX, NDY, DX, DY, 0.5 * DZ, n2)
+    # Phase Delay for the propagation in the step DZ/2
+    PHI_m_half = PHI_m_half * np.exp(-1j * k * n0 * DZ)
+    # Using this half as the initial
+    PHI_m_auxNL = PHI_m_half  # First NL term is calculated from the initial field calculated at DZ/2
+
+    PHI_m_to_save = []
+    z_to_save = []
+
+    for z_step in range(1, NDZ):
+        n0 = nalongZ[z_step]
+        n2 = n2alongZ[z_step]
+
+        # Propagating a whole DZ
+        PHI_pm = BPM_First_half(PHI_m, PHI_m_auxNL, k, n0, NDX, NDY, DX, DY, DZ, n2)
+        PHI_m = BPM_Second_half(PHI_pm, PHI_m_auxNL, k, n0, NDX, NDY, DX, DY, DZ, n2)
+        # Phase Delay for the propagation in the step DZ
+        PHI_m = PHI_m * np.exp(-1j * k * n0 * DZ)
+        PHI_m_auxNL_DZ_2 = PHI_m  # Non-linear term is calculated from the field a half step behind
+
+        # Propagating a whole DZ but staircased
+        PHI_pm_DZ_2 = BPM_First_half(PHI_m_half, PHI_m_auxNL_DZ_2, k, n0, NDX, NDY, DX, DY, DZ, n2)
+        PHI_m_half = BPM_Second_half(PHI_pm_DZ_2, PHI_m_auxNL_DZ_2, k, n0, NDX, NDY, DX, DY, DZ, n2)
+        # Phase Delay for the propagation in the step DZ
+        PHI_m_half = PHI_m_half * np.exp(-1j * k * n0 * DZ)
+        PHI_m_auxNL = PHI_m_half  # Non-linear term is calculated from the field a half step behind
+
+        if Npoints_Z_to_save > 0:
+            if (z_step % N_count_to_save == 0) or (z_step == 0) or (z_step == NDZ - 1):
+                # Save desired steps
+                PHI_m_to_save.append(PHI_m.copy())
+                z_to_save.append(DZ * z_step)
+                c_count_to_save += 1
+        else:
+            PHI_m_to_save = []
+            z_to_save = []
+
+    return PHI_m, np.array(PHI_m_to_save), np.array(z_to_save)
 
 
