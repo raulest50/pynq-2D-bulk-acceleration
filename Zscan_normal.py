@@ -4,7 +4,6 @@ import numpy as np
 from Functions import Sellmeir_Fcy_Response, Create_Volumetric_Data,\
     BPM_2D_Prop_NL_var_alongZ, Gaussian_BEAM_Solution_Saleh, Gaussian_BEAM_Solution_Saleh1D
 import time
-import cv2
 import matplotlib.pyplot as plt
 
 # Physical constants
@@ -231,10 +230,10 @@ Lsample_end = Lsample_ini + Lpath_length
 zSampleLocs = np.linspace(Lsample_ini, Lsample_end, 100)
 
 # Create the video writer
-video_filename = 'myVideoZscan6cm.avi'
-frame_rate = 5
-fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Define codec and create VideoWriter object
-video_writer = cv2.VideoWriter(video_filename, fourcc, frame_rate, (640, 480))
+#video_filename = 'myVideoZscan6cm.avi'
+#frame_rate = 5
+#fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Define codec and create VideoWriter object
+#video_writer = cv2.VideoWriter(video_filename, fourcc, frame_rate, (640, 480))
 
 # Now you can use video_writer to write frames to the video file
 # Remember to release the video writer after writing all frames
@@ -304,50 +303,13 @@ for lzSample in range(len(zSampleLocs)):
     # Slice Interpolation
     XX3, YY3, ZZ3 = np.meshgrid(X, Y, z_to_save)
 
-    fig = plt.figure(1245, figsize=(12, 8))
-
-    plt.subplot(2, 3, (1, 4))
-    plt.plot(Z * 1e2, nalongZ)
-    plt.xlabel('z [cm]')
-    plt.ylabel('n')
-    plt.gca().invert_xaxis()
-
-    plt.subplot(2, 3, (2, 5))
-    # Use a 2D slice of VolData, XX3, and YY3
-    plt.contourf(XX3[:, :, 0] * 1e6, YY3[:, :, 0] * 1e6, VolData[:, :, 0], cmap='viridis')
-    plt.xlabel('x [\mu m]')
-    plt.ylabel('y [\mu m]')
-    plt.title(f'z sample {zSample * 1e2:.2f} [cm]')
-
-    plt.subplot(2, 3, 3)
-    plt.contourf(XX * 1e6, YY * 1e6, np.abs(PHI_OUT_norm.T), cmap='viridis')
-    plt.colorbar()
-    plt.xlabel('x [\mu m]')
-    plt.ylabel('y [\mu m]')
-    plt.title(f'z sample {zSample * 1e2:.2f} [cm]')
-
-    plt.subplot(2, 3, 6)
-    plt.plot(zSampleLocs[:lzSample + 1], Tout[:lzSample + 1], 'o-')
-    plt.xlabel('Zscan Sample locs [cm]')
-    plt.ylabel('Transmittance[p.u]')
-    plt.grid(True)
-
-    fig.tight_layout()
-
-    # Save frame to video
-    fig.canvas.draw()
-    frame = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-    frame = frame.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-    video_writer.write(frame)
-
-    plt.close(fig)
 
 # Stop the timer
 end_time = time.time()
 print(f'Time elapsed: {end_time - start_time:.2f} seconds')
 
 # Release the video writer object
-video_writer.release()
+#video_writer.release()
 
 # Plot the transmittance vs. Z-scan sample locations
 plt.figure()
