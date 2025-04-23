@@ -105,8 +105,8 @@ DX = 15e-6
 DY = 15e-6
 DZ = 100e-6
 
-Lx = 700e-6
-Ly = 700e-6
+Lx = 700e-6/8
+Ly = 700e-6/8
 Lz = 6e-2  # max. Lz to simulate
 
 NDX = int(np.floor(Lx / DX))  # discretization along X
@@ -250,6 +250,7 @@ PHI_out_Numeric = np.zeros((NDX + 1, NDY + 1, len(Freq)), dtype=complex)
 
 AW0 = [E0_Amplitude]
 
+
 # Loop over each sample location
 for lzSample in range(len(zSampleLocs)):
 
@@ -259,7 +260,7 @@ for lzSample in range(len(zSampleLocs)):
 
     # Solve the propagation equation for each frequency
     for freq_i in range(len(Freq)):
-
+        print(f'freq array : {Freq}')
         # Take the amplitude for each frequency
         AmpNL = AW0[freq_i]
         # Each amplitude has the same spatial profile
