@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "tesis"
+version = "0.1.0"
+description = ""
+authors = ["esteban <raulest50@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+numpy = "^2.2.1"
+matplotlib = "^3.10.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pigar = "^2.1.7"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
