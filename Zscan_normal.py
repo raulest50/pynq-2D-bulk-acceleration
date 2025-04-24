@@ -6,6 +6,8 @@ from Functions import Sellmeir_Fcy_Response, Create_Volumetric_Data,\
 import time
 import matplotlib.pyplot as plt
 
+import pandas as pd
+
 # Physical constants
 c = 3e8  # speed of light [m/s]
 Mu_Zero = 4 * np.pi * 1e-7
@@ -321,5 +323,9 @@ plt.grid(True)
 plt.rcParams.update({'font.size': 14})
 plt.show()
 
-
+df = pd.DataFrame({
+    'z': zSampleLocs * 1e2,
+    'T': Tout
+})
+df.to_csv('T_n.csv', index=False)
 

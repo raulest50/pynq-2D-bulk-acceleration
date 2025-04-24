@@ -1,6 +1,10 @@
 import numpy as np
-from Functions import Sellmeir_Fcy_Response, Create_Volumetric_Data, BPM_2D_Prop_NL_var_alongZ, Gaussian_BEAM_Solution_Saleh, Gaussian_BEAM_Solution_Saleh1D
+import pandas as pd
+
+from FunctionsSimplified import Sellmeir_Fcy_Response, BPM_2D_Prop_NL_var_alongZ,\
+    Gaussian_BEAM_Solution_Saleh, Gaussian_BEAM_Solution_Saleh1D
 import time
+
 import matplotlib.pyplot as plt
 
 # Physical constants
@@ -135,8 +139,8 @@ RdAnaly = X
 Eout_Analytic, _ = Gaussian_BEAM_Solution_Saleh1D(Eo, wo, ko * n_omega, RdAnaly, Lz - waist_loc)
 
 plt.figure()
-plt.plot(RdAnaly * 1e6, np.abs(SourceX))
-plt.plot(RdAnaly * 1e6, np.abs(Eout_Analytic))
+plt.plot(RdAnaly * 1e6, np.abs(SourceX))  # type: ignore[arg-type]
+plt.plot(RdAnaly * 1e6, np.abs(Eout_Analytic))  # type: ignore[arg-type]
 plt.grid(True)
 plt.rcParams.update({'font.size': 14})
 plt.legend(['input at z=0', 'output analytical'])
@@ -148,15 +152,15 @@ plt.show()
 PHI_m0 = np.transpose(SourceProf)
 
 plt.figure()
-ax1 = plt.subplot(2, 2, (1, 3), projection='3d')
-ax1.plot_surface(XX * 1e6, YY * 1e6, np.abs(PHI_m0.T))
+ax1 = plt.subplot(2, 2, (1, 3), projection='3d')  # type: ignore[arg-type]
+ax1.plot_surface(XX * 1e6, YY * 1e6, np.abs(PHI_m0.T))  # type: ignore[arg-type]
 ax1.set_xlabel('x [μm]')
 ax1.set_ylabel('y [μm]')
 ax1.set_zlabel('E(x,y) [p.u.]')
 ax1.set_aspect('auto')
 plt.rcParams.update({'font.size': 14})
 plt.subplot(222)
-plt.contour(XX * 1e6, YY * 1e6, np.abs(PHI_m0.T))
+plt.contour(XX * 1e6, YY * 1e6, np.abs(PHI_m0.T))  # type: ignore[arg-type]
 plt.xlabel('x [μm]')
 plt.ylabel('y [μm]')
 plt.title('Initial Beam profile')
@@ -176,7 +180,7 @@ plt.show()
 omega_f = 2 * np.pi * f0
 k = omega_f / c
 
-Npoints_Z_to_save = 15
+
 LeffSample = 1e-3
 Lsample_ini = 0.5e-2
 Lpath_length = 5.5e-2
@@ -201,26 +205,52 @@ for lzSample in range(len(zSampleLocs)):
     nalongZ = n_air + (n_omega - n_air) * Z_n_profile
     n2alongZ = n2_air + n2 * Z_n_profile
 
+    print(f"lzSample > {lzSample} / {len(zSampleLocs)-1}")
+
+    # Optional: visualize the refractive index profile
+    # if(lzSample % 10 == 0):
+    #     plt.plot(nalongZ)
+    #     plt.show()
+    #     plt.plot(n2alongZ)  # type: ignore[arg-type]
+    #     plt.show()
+
     # Propagate the beam along z
-    PHI_m, PHI_m_alongZ, z_to_save = BPM_2D_Prop_NL_var_alongZ(
-        PHI_m0_freq, k, NDX, NDY, NDZ, DX, DY, DZ,
-        Npoints_Z_to_save, nalongZ, n2alongZ
+    # PHI_m, PHI_m_alongZ, z_to_save = BPM_2D_Prop_NL_var_alongZ(
+    #     PHI_m0_freq, k, NDX, NDY, NDZ, DX, DY, DZ,
+    #     Npoints_Z_to_save, nalongZ, n2alongZ
+    # )
+
+
+    """
+    THIS IMPLEMENTS A SINGLE Z-SCAN.
+    Z-SCAN EXPERIMENT IS SIMULATED len(zSampleLocs) TIMES AT EACH zSampleLocs LOCATIONS FOR THE SAMPLE
+    """
+    PHI_m = BPM_2D_Prop_NL_var_alongZ(
+        PHI_m0_freq, k,
+        NDX, NDY, NDZ, DX, DY, DZ,
+        nalongZ, n2alongZ
     )
 
     # Calculate the transmitted optical power through the aperture
     Tout[lzSample] = np.sum(np.abs(PHI_m[maskS])**2) * np.pi * (S/2)**2
 
     # Optionally, process volumetric data (for visualization or further analysis)
-    #normalized = 1
-    #VolData, XX, YY, zLL = Create_Volumetric_Data(PHI_m_alongZ, XX, YY, z_to_save, Npoints_Z_to_save, normalized)
+    # normalized = 1
+    # VolData, XX, YY, zLL = Create_Volumetric_Data(PHI_m_alongZ, XX, YY, z_to_save, Npoints_Z_to_save, normalized)
 
 end_time = time.time()
 print(f'Time elapsed: {end_time - start_time:.2f} seconds')
 
 plt.figure()
-plt.plot(zSampleLocs * 1e2, Tout)
+plt.plot(zSampleLocs * 1e2, Tout)  # type: ignore[arg-type]
 plt.xlabel('Zscan Sample locs [cm]')
 plt.ylabel('Transmittance [p.u.]')
 plt.grid(True)
 plt.rcParams.update({'font.size': 14})
 plt.show()
+
+df = pd.DataFrame({
+    'z': zSampleLocs * 1e2,
+    'T': Tout
+})
+df.to_csv('T_s.csv', index=False)
