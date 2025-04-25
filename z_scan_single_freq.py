@@ -93,8 +93,8 @@ DY = 15e-6
 DZ = 100e-6
 
 # For faster test runs, using smaller Lx and Ly (originally 700e-6 scaled down by 8)
-Lx = 700e-6/8
-Ly = 700e-6/8
+Lx = 700e-6
+Ly = 700e-6
 Lz = 6e-2  # total propagation distance
 
 NDX = int(np.floor(Lx / DX))
@@ -225,6 +225,7 @@ for lzSample in range(len(zSampleLocs)):
     THIS IMPLEMENTS A SINGLE Z-SCAN.
     Z-SCAN EXPERIMENT IS SIMULATED len(zSampleLocs) TIMES AT EACH zSampleLocs LOCATIONS FOR THE SAMPLE
     """
+
     PHI_m = BPM_2D_Prop_NL_var_alongZ(
         PHI_m0_freq, k,
         NDX, NDY, NDZ, DX, DY, DZ,

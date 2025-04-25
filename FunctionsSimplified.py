@@ -1,6 +1,45 @@
 
 import numpy as np
 
+
+"""
+        THESE 3 METHODS ARE USED ONCE AT THE BEGINING OF THE ROUTINE
+"""
+
+def Sellmeir_Fcy_Response(c, f):
+    """
+    Sellmeir equation for calculating the refractive index (n_omega)
+    for fused silica given the speed of light (c) and frequency (f).
+
+    Parameters:
+    c (float): Speed of light in m/s
+    f (float): Frequency in Hz
+
+    Returns:
+    n_omega (float): Refractive index at the given frequency
+    """
+
+    # Omega = 2 * np.pi * f
+    Lambda = c / f
+    Lambda_in_Micras = Lambda * 1e6
+
+    # Sellmeir Equation coefficients for fused silica
+    B1 = 0.6961663
+    B2 = 0.4079426
+    B3 = 0.8974794
+
+    C1 = 0.0684043
+    C2 = 0.1162414
+    C3 = 9.896161
+
+    nsq = 1 + ((B1 * Lambda_in_Micras ** 2) / (Lambda_in_Micras ** 2 - C1 ** 2)) + \
+          ((B2 * Lambda_in_Micras ** 2) / (Lambda_in_Micras ** 2 - C2 ** 2)) + \
+          ((B3 * Lambda_in_Micras ** 2) / (Lambda_in_Micras ** 2 - C3 ** 2))
+
+    n_omega = np.sqrt(nsq)
+
+    return n_omega
+
 def Gaussian_BEAM_Solution_Saleh(Eo,wo,ko,XX,YY,Z):
     zo = ko * (wo ** 2) / 2
     w_z = wo * np.sqrt(1 + (Z / zo) ** 2)
@@ -36,6 +75,11 @@ def Gaussian_BEAM_Solution_Saleh1D(Eo,wo,ko,R,Z):
                                     + 1j * psi_z)
 
     return Eout, w_z
+
+
+"""
+        FOR ACCELERATION >>>>>>>>>
+"""
 
 def BPM_First_half_TBC(PHI_m, PHI_m_auxNL, k, n0, NDX, NDY, DX, DY, DZ, n2):
     """
@@ -233,50 +277,15 @@ def BPM_Second_half_TBC(PHI_pm, PHI_m_auxNL, k, n0, NDX, NDY, DX, DY, DZ, n2):
     return PHI_aux
 
 
-def Sellmeir_Fcy_Response(c, f):
-    """
-    Sellmeir equation for calculating the refractive index (n_omega)
-    for fused silica given the speed of light (c) and frequency (f).
-
-    Parameters:
-    c (float): Speed of light in m/s
-    f (float): Frequency in Hz
-
-    Returns:
-    n_omega (float): Refractive index at the given frequency
-    """
-
-    Omega = 2 * np.pi * f
-    Lambda = c / f
-    Lambda_in_Micras = Lambda * 1e6
-
-    # Sellmeir Equation coefficients for fused silica
-    B1 = 0.6961663
-    B2 = 0.4079426
-    B3 = 0.8974794
-
-    C1 = 0.0684043
-    C2 = 0.1162414
-    C3 = 9.896161
-
-    nsq = 1 + ((B1 * Lambda_in_Micras ** 2) / (Lambda_in_Micras ** 2 - C1 ** 2)) + \
-          ((B2 * Lambda_in_Micras ** 2) / (Lambda_in_Micras ** 2 - C2 ** 2)) + \
-          ((B3 * Lambda_in_Micras ** 2) / (Lambda_in_Micras ** 2 - C3 ** 2))
-
-    n_omega = np.sqrt(nsq)
-
-    return n_omega
-
-
-"""
-In Functions module, Npoints_Z_to_save is only for saving the 2d beam profile, in the main
-script was set to 15, that is to take 15 snapshots of the beam profile and to return it.
-but since i'm only interested in the transmittance by now, then i dont need that and removed
-all code related to the snapshots. This function is only return the optical field at the end of the propagation. 
-I want to simplify the code as much as i can to facilitate is translation
-to C/C++ HLS.
-"""
 def BPM_2D_Prop_NL_var_alongZ(PHI_m, k, NDX, NDY, NDZ, DX, DY, DZ, nalongZ, n2alongZ):
+    """
+    In Functions module, Npoints_Z_to_save is only for saving the 2d beam profile, in the main
+    script was set to 15, that is to take 15 snapshots of the beam profile and to return it.
+    but since i'm only interested in the transmittance by now, then i dont need that and removed
+    all code related to the snapshots. This function is only return the optical field at the end of the propagation.
+    I want to simplify the code as much as i can to facilitate is translation
+    to C/C++ HLS.
+    """
     n0 = nalongZ[0]
     n2 = n2alongZ[0]
 
