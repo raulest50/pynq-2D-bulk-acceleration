@@ -22,17 +22,17 @@ omega_0 = 2 * np.pi * f0   # angular frequency
 n_omega = Sellmeir_Fcy_Response(c, f0)
 
 # Non-linear refractive index
-n2 = 2.5e-20
+n2_sample = 2.5e-20
 
 # Print media properties
 print('----------Media Properties at central Frequency ------------')
 print(f'Lambda0  > {Lambda0 * 1e9:.2f} [nm]')
 print(f'f0 > {f0 * 1e-12:.2f} [THz]')
 print(f'n_omega > {n_omega:.5f}')
-print(f'n2 > {n2 * 1e20:.2f} x10^(-20)')
+print(f'n2 > {n2_sample * 1e20:.2f} x10^(-20)')
 print('----------Critical Power for Self Trapping------------')
 
-PcriticalSelfTrap = (np.pi * (0.61**2) * Lambda0**2) / (8 * n_omega * n2)
+PcriticalSelfTrap = (np.pi * (0.61**2) * Lambda0**2) / (8 * n_omega * n2_sample)
 print(f'Optical Critical Power Self-trap PcriticalSelfTrap > {PcriticalSelfTrap * 1e-9:.2f} GW')
 print('------------------------------------------------  ')
 
@@ -54,7 +54,7 @@ print(f'E0_peak > {E0_peak:.2f}')
 
 # Self-focusing lengths
 Zsf = ((2 * n_omega * waist_mts**2) / Lambda0) * (1 / np.sqrt(Optical_Power / PcriticalSelfTrap))
-Zsf2 = waist_measured * np.sqrt(n_omega / (2 * n2 * I0_mts))
+Zsf2 = waist_measured * np.sqrt(n_omega / (2 * n2_sample * I0_mts))
 print(f'Self-focusing length Zsf > {Zsf * 1e2:.2f} [cm]')
 print(f'Self-focusing length Zsf2 > {Zsf2:.2f} [cm]')
 print('------------------------------------------------  ')
@@ -74,12 +74,12 @@ E0_Amplitude = np.sqrt(I0_peak)
 print(f'Optical_Power > {Optical_Power * 1e-6:.2f} MW')
 print(f'Critical Power Self-trap PcriticalSelfTrap > {PcriticalSelfTrap * 1e-6:.2f} MW')
 print(f'E0_peak > {E0_Amplitude:.2f}')
-print(f'DeltaN = n2 * E0_Amplitude**2 > {n2 * E0_Amplitude**2:.2e}')
+print(f'DeltaN = n2 * E0_Amplitude**2 > {n2_sample * E0_Amplitude ** 2:.2e}')
 
 if Optical_Power >= PcriticalSelfTrap:
     ZRayleigh = np.pi * wo**2 / Lambda0
     Zsf_NewWo1 = abs(((2 * n_omega * wo**2) / Lambda0) * (1 / np.sqrt((Optical_Power / PcriticalSelfTrap) - 1)))
-    Zsf_NewWo = wo * np.sqrt(n_omega / (2 * n2 * I0_mts))
+    Zsf_NewWo = wo * np.sqrt(n_omega / (2 * n2_sample * I0_mts))
     print(f'FWHM_beam > {FWHM_beam * 1e6:.2f} [um]')
     print(f'wo > {wo * 1e6:.2f} [um]')
     print(f'ZRayleigh > {ZRayleigh * 1e2:.2f} [cm]')
@@ -93,8 +93,8 @@ DY = 15e-6
 DZ = 100e-6
 
 # For faster test runs, using smaller Lx and Ly (originally 700e-6 scaled down by 8)
-Lx = 700e-6
-Ly = 700e-6
+Lx = 700e-6/8
+Ly = 700e-6/8
 Lz = 6e-2  # total propagation distance
 
 NDX = int(np.floor(Lx / DX))
@@ -181,31 +181,33 @@ omega_f = 2 * np.pi * f0
 k = omega_f / c
 
 
-LeffSample = 1e-3
-Lsample_ini = 0.5e-2
-Lpath_length = 5.5e-2
-Lsample_end = Lsample_ini + Lpath_length
-zSampleLocs = np.linspace(Lsample_ini, Lsample_end, 100)
+sample_tickness_units = 10  # Sample thickness in meters
+# SampleTicknessValue = DZ * sample_tickness_units  # (Leff), sample thickness as integer multiple of Z axis resolution
+
+# Lsample_ini = 0.5e-2
+# Lpath_length = 5.5e-2
+# Lsample_end = Lsample_ini + Lpath_length
+# zSampleLocs = np.linspace(Lsample_ini, Lsample_end, 5)
+
+sample_start_travel_location = 50
+sample_end_travel_location = 550
+stops = 40  # number of stops for the sample during the z-scan
+sample_locations = np.linspace(sample_start_travel_location, sample_end_travel_location, stops, dtype=int)
 
 start_time = time.time()
-Tout = np.zeros(len(zSampleLocs))
+Tout = np.zeros(len(sample_locations))  # Transmittance array
 
 # Loop over each sample location (600 propagation steps overall)
-for lzSample in range(len(zSampleLocs)):
-    zSample = zSampleLocs[lzSample]
-    Z_n_profile = np.zeros(len(Z))
-    Z_n_profile[(Z >= (zSample - LeffSample/2)) & (Z <= (zSample + LeffSample/2))] = 1
+for current_sample_index_location in range(len(sample_locations)):
+
 
     # Solve the propagation equation for f0 only (no frequency loop)
     AmpNL = E0_Amplitude
     PHI_m0_freq = AmpNL * PHI_m0
 
     n_air = 1
-    n2_air = 0
-    nalongZ = n_air + (n_omega - n_air) * Z_n_profile
-    n2alongZ = n2_air + n2 * Z_n_profile
 
-    print(f"lzSample > {lzSample} / {len(zSampleLocs)-1}")
+    print(f"lzSample > {current_sample_index_location} / {len(sample_locations) - 1}")
 
     # Optional: visualize the refractive index profile
     # if(lzSample % 10 == 0):
@@ -225,15 +227,15 @@ for lzSample in range(len(zSampleLocs)):
     THIS IMPLEMENTS A SINGLE Z-SCAN.
     Z-SCAN EXPERIMENT IS SIMULATED len(zSampleLocs) TIMES AT EACH zSampleLocs LOCATIONS FOR THE SAMPLE
     """
-
+    print(f"Phi dims : {len(PHI_m0_freq)} ")
     PHI_m = BPM_2D_Prop_NL_var_alongZ(
         PHI_m0_freq, k,
         NDX, NDY, NDZ, DX, DY, DZ,
-        nalongZ, n2alongZ
+        n_air, n_omega, n2_sample, sample_locations[current_sample_index_location], sample_tickness_units,
     )
 
     # Calculate the transmitted optical power through the aperture
-    Tout[lzSample] = np.sum(np.abs(PHI_m[maskS])**2) * np.pi * (S/2)**2
+    Tout[current_sample_index_location] = np.sum(np.abs(PHI_m[maskS]) ** 2) * np.pi * (S / 2) ** 2
 
     # Optionally, process volumetric data (for visualization or further analysis)
     # normalized = 1
@@ -243,7 +245,7 @@ end_time = time.time()
 print(f'Time elapsed: {end_time - start_time:.2f} seconds')
 
 plt.figure()
-plt.plot(zSampleLocs * 1e2, Tout)  # type: ignore[arg-type]
+plt.plot(sample_locations * 1e2, Tout)  # type: ignore[arg-type]
 plt.xlabel('Zscan Sample locs [cm]')
 plt.ylabel('Transmittance [p.u.]')
 plt.grid(True)
@@ -251,7 +253,7 @@ plt.rcParams.update({'font.size': 14})
 plt.show()
 
 df = pd.DataFrame({
-    'z': zSampleLocs * 1e2,
+    'z': sample_locations * 1e2,
     'T': Tout
 })
 df.to_csv('T_s.csv', index=False)

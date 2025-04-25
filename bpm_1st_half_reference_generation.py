@@ -1,8 +1,7 @@
-# bpm_1st_half_reference_generation.py
 import numpy as np
 from FunctionsSimplified import BPM_First_half_TBC
 
-# --- PARAMETERS (must match tb_bpm_first_half.cpp) ---
+# --- PARAMETERS (must match tb and C++ TB) ---
 DX = 15e-6
 DY = 15e-6
 DZ = 100e-6
@@ -12,9 +11,6 @@ Lz = 6e-2
 
 NDX = int(np.floor(Lx / DX))
 NDY = int(np.floor(Ly / DY))
-NDZ = int(np.ceil(Lz / DZ))
-
-print(f" NDX > {NDX} NDY > {NDY} NDZ > {NDZ}")
 
 c = 3e8
 Lambda0 = 800e-9
@@ -26,18 +22,29 @@ k = omega_f / c
 n0 = 1.0
 n2 = 2.5e-20
 
-# --- GENERATE TEST DATA ---
+# Generate test data
 np.random.seed(0)
-PHI_m = (np.random.rand(NDX + 1, NDY + 1) + 1j*np.random.rand(NDX + 1, NDY + 1)).astype(np.complex64)
-PHI_m_auxNL = PHI_m.copy()
+PHI_m        = (np.random.rand(NDX+1, NDY+1) + 1j * np.random.rand(NDX+1, NDY+1)).astype(np.complex64)
+PHI_m_auxNL  = PHI_m.copy()
 
-print(type(PHI_m))
+# Compute reference half-step
+PHI_half_ref = BPM_First_half_TBC(PHI_m, PHI_m_auxNL, k, n0, NDX, NDY, DX, DY, 0.5*DZ, n2)
 
-# --- RUN REFERENCE HALF-STEP ---
-PHI_half_ref = BPM_First_half_TBC(PHI_m, PHI_m_auxNL, k, n0, NDX, NDY, DX, DY, 0.5 * DZ, n2)
+# Utility to write ASCII .dat
+def write_ascii(path, arr):
+    with open(path, 'w') as f:
+        for j in range(arr.shape[1]):
+            for i in range(arr.shape[0]):
+                re = arr[i,j].real
+                im = arr[i,j].imag
+                f.write(f"{re:.8e} {im:.8e}\n")
 
-# --- DUMP EACH COMPLEX ARRAY TO A SINGLE .dat FILE ---
-PHI_m       .tofile('./bpm_1st_h_testfiles/phi_m0.dat')
-PHI_m_auxNL .tofile('./bpm_1st_h_testfiles/phi_aux.dat')
-PHI_half_ref.tofile('./bpm_1st_h_testfiles/phi_half_ref.dat')
+base = './bpm_1st_h_testfiles'
+write_ascii(f'{base}/phi_m0.dat',       PHI_m)
+write_ascii(f'{base}/phi_aux.dat',      PHI_m_auxNL)
+write_ascii(f'{base}/phi_half_ref.dat', PHI_half_ref)
 
+print("Wrote ASCII test files:")
+print(" - phi_m0.dat")
+print(" - phi_aux.dat")
+print(" - phi_half_ref.dat")

@@ -277,7 +277,7 @@ def BPM_Second_half_TBC(PHI_pm, PHI_m_auxNL, k, n0, NDX, NDY, DX, DY, DZ, n2):
     return PHI_aux
 
 
-def BPM_2D_Prop_NL_var_alongZ(PHI_m, k, NDX, NDY, NDZ, DX, DY, DZ, nalongZ, n2alongZ):
+def BPM_2D_Prop_NL_var_alongZ(PHI_m, k, NDX, NDY, NDZ, DX, DY, DZ, n_medium, n_sample, n2_sample, Zi_sample, Stu):
     """
     In Functions module, Npoints_Z_to_save is only for saving the 2d beam profile, in the main
     script was set to 15, that is to take 15 snapshots of the beam profile and to return it.
@@ -286,8 +286,9 @@ def BPM_2D_Prop_NL_var_alongZ(PHI_m, k, NDX, NDY, NDZ, DX, DY, DZ, nalongZ, n2al
     I want to simplify the code as much as i can to facilitate is translation
     to C/C++ HLS.
     """
-    n0 = nalongZ[0]
-    n2 = n2alongZ[0]
+
+    n0 = n0_z(0, Zi_sample, Stu, n_medium, n_sample)  # first order n in the z index specified by Zis
+    n2 = n2_z(0, Zi_sample, Stu, n2_sample)  # second order n in the z index specified by Zis (assuming n2 of medium is 0)
 
     PHI_m_auxNL_DZ_2 = PHI_m  # First NL term is calculated from the initial field
     PHI_m_half = PHI_m  # First term is calculated from the initial field
@@ -300,13 +301,10 @@ def BPM_2D_Prop_NL_var_alongZ(PHI_m, k, NDX, NDY, NDZ, DX, DY, DZ, nalongZ, n2al
     # Using this half as the initial
     PHI_m_auxNL = PHI_m_half  # First NL term is calculated from the initial field calculated at DZ/2
 
-    PHI_m_to_save = []
-    z_to_save = []
-
 
     for z_step in range(1, NDZ):
-        n0 = nalongZ[z_step]
-        n2 = n2alongZ[z_step]
+        n0 = n0_z(z_step, Zi_sample, Stu, n_medium, n_sample)  # first order n in the z index specified by Zis
+        n2 = n2_z(z_step, Zi_sample, Stu, n2_sample)  # second order n in the z index specified by Zis (assuming n2 of medium is 0)
 
         # Propagating a whole DZ
         PHI_pm = BPM_First_half_TBC(PHI_m, PHI_m_auxNL, k, n0, NDX, NDY, DX, DY, DZ, n2)
@@ -325,3 +323,14 @@ def BPM_2D_Prop_NL_var_alongZ(PHI_m, k, NDX, NDY, NDZ, DX, DY, DZ, nalongZ, n2al
     return PHI_m
 
 
+def n2_z(current_z_index, sample_location, sample_thickness_units, n2_value):
+    if current_z_index < sample_location or current_z_index > sample_location + sample_thickness_units-1:
+        return 0
+    else:
+        return n2_value
+
+def n0_z(current_z_index, sample_location, sample_thickness_units, n_medium, n_sample):
+    if current_z_index < sample_location or current_z_index > sample_location + sample_thickness_units-1:
+        return n_medium
+    else:
+        return n_sample
