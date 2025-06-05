@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
-from MyHelperFunctions import u_gaussian, ut_gaussian, utt_gaussian, uttt_gaussian, create_tridiagonal_matrix
+from own_test.MyHelperFunctions import u_gaussian, ut_gaussian, utt_gaussian, uttt_gaussian, create_tridiagonal_matrix
 
 # Domain parameters
 c=4

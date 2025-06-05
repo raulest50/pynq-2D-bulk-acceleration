@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
-from MyHelperFunctions import create_tridiagonal_matrix
+from own_test.MyHelperFunctions import create_tridiagonal_matrix
 
 # -------------------------
 # Parámetros del dominio (normalizados)
