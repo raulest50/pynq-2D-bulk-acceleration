@@ -1,7 +1,13 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
-from own_test.MyHelperFunctions import u_gaussian, ut_gaussian, create_tridiagonal_matrix
+import sys
+import os
+
+# Add the parent directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from MyHelperFunctions import u_gaussian, ut_gaussian, create_tridiagonal_matrix
 
 # ——— Domain & parameters ———
 c     = 4.0             # wave speed

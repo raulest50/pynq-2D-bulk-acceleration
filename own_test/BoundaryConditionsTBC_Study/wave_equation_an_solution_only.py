@@ -1,7 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from own_test.MyHelperFunctions import u_gaussian
+import sys
+import os
+
+# Add the parent directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from MyHelperFunctions import u_gaussian
 
 # Parameters
 L = 10.0          # Domain length
