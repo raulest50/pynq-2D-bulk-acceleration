@@ -58,18 +58,18 @@ ax.grid(True)
 def paso_CN(E_prev):
     ratio_rg = E_prev[-1] / E_prev[-2]
     ratio_lf = E_prev[0] / E_prev[1]
-    ghost_rg = E_prev[-1] * ratio_rg
-    ghost_lf = E_prev[0] * ratio_lf
-    B_mod = B.copy()
-    B_mod[0, 0] += g*ratio_lf # frontera absorbente izquierda
-    B_mod[-1, -1] += g * ratio_rg # frontera absorbente derecha
+    # ghost_rg = E_prev[-1] * ratio_rg
+    # ghost_lf = E_prev[0] * ratio_lf
+    # B_mod = B.copy()
+    B[0, 0] = -2*g +1 + g*ratio_lf # frontera absorbente izquierda
+    B[-1, -1] = -2*g +1 + g * ratio_rg # frontera absorbente derecha
     b = B.dot(E_prev)
-    #b[-1] += ghost_rg*g
-    #b[0] += ghost_lf*g
-    A_mod = A.copy()
-    A_mod[0, 0] += g * ratio_lf # frontera absorbente izquierda
-    A_mod[-1, -1] += g * ratio_rg # frontera absorbente derecha
-    E_next = np.linalg.solve(A_mod, b)
+    # b[-1] += ghost_rg*g
+    # b[0] += ghost_lf*g
+    #A_mod = A.copy()
+    A[0, 0] = -2*g -1 + g * ratio_lf # frontera absorbente izquierda
+    A[-1, -1] = -2*g -1 + g * ratio_rg # frontera absorbente derecha
+    E_next = np.linalg.solve(A, b)
     return E_next
 
 # -------------------------
