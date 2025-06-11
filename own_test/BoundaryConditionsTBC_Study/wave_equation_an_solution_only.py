@@ -5,9 +5,10 @@ import sys
 import os
 
 # Add the parent directory to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from MyHelperFunctions import u_gaussian
+# Import from the helpers package
+from helpers import u_gaussian
 
 # Parameters
 L = 10.0          # Domain length

@@ -56,12 +56,19 @@ ax.grid(True)
 # -------------------------
 # Paso de Crank–Nicolson (primer orden en z)
 def paso_CN(E_prev):
-    ratio = E_prev[-1] / E_prev[-2]
-    ghost = E_prev[-1] * ratio
+    ratio_rg = E_prev[-1] / E_prev[-2]
+    ratio_lf = E_prev[0] / E_prev[1]
+    ghost_rg = E_prev[-1] * ratio_rg
+    ghost_lf = E_prev[0] * ratio_lf
+    B_mod = B.copy()
+    B_mod[0, 0] += g*ratio_lf # frontera absorbente izquierda
+    B_mod[-1, -1] += g * ratio_rg # frontera absorbente derecha
     b = B.dot(E_prev)
-    b[-1] += ghost*g
+    #b[-1] += ghost_rg*g
+    #b[0] += ghost_lf*g
     A_mod = A.copy()
-    A_mod[-1, -1] += g * ratio
+    A_mod[0, 0] += g * ratio_lf # frontera absorbente izquierda
+    A_mod[-1, -1] += g * ratio_rg # frontera absorbente derecha
     E_next = np.linalg.solve(A_mod, b)
     return E_next
 
