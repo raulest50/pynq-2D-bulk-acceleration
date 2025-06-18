@@ -174,16 +174,16 @@ def half_nonlinear(phi, k_sample, n2_sample, dz):
    return phase * phi
 
 
-def single_bpm_step_within_sample(phi, k_medium, k_sample, n2_sample, dz, dx, dy, eps=1e-12):
+def single_bpm_step_within_sample(phi, k_sample, n2_sample, dz, dx, dy, eps=1e-12):
     Ny, Nx = phi.shape
-    phi_inter = adi_x(phi, Ny, eps, k_medium, dz, dx)
+    phi_inter = adi_x(phi, Ny, eps, k_sample, dz, dx)
     phi_inter = half_nonlinear(phi_inter, k_sample, n2_sample, dz)
-    phi_inter = adi_y(phi_inter, Nx, eps, k_medium, dz, dy)
-    phi_inter = half_nonlinear(phi_inter, k_medium, n2_sample, dz)
+    phi_inter = adi_y(phi_inter, Nx, eps, k_sample, dz, dy)
+    phi_inter = half_nonlinear(phi_inter, k_sample, n2_sample, dz)
     return phi_inter
 
 
-def single_bpm_linear_medium(phi, k_medium, dz, dx, dy, eps=1e-12):
+def single_bpm_step_only_linear_medium(phi, k_medium, dz, dx, dy, eps=1e-12):
     """
     Performs a single BPM step in a linear medium (without nonlinear effects).
 
@@ -209,74 +209,25 @@ def single_bpm_linear_medium(phi, k_medium, dz, dx, dy, eps=1e-12):
     """
     Ny, Nx = phi.shape
     phi_inter = adi_x(phi, Ny, eps, k_medium, dz, dx)
-    phi_out = adi_y(phi_inter, Nx, eps, k_medium, dz, dy)
+    phi_out = adi_y(phi_inter, Nx,   eps, k_medium, dz, dy)
     return phi_out
 
 
-def single_z_scan(phi, sample_init_position, sample_thickness, z_positions, k_medium, k_sample, n2_sample, dz, dx, dy, eps=1e-12):
-    """
-    Simulates a z-scan experiment by propagating the beam through a sample at different z positions.
+def full_propagation(phi0, sample, domain):
+    phi = np.copy(phi0)
 
-    Parameters:
-    ----------
-    phi : numpy.ndarray
-        Initial complex field
-    sample_init_position : float
-        Initial position of the sample along z-axis
-    sample_thickness : float
-        Thickness of the sample
-    z_positions : numpy.ndarray
-        Array of z positions for the scan
-    k_medium : float
-        Wave number in the surrounding medium
-    k_sample : float
-        Wave number in the sample
-    n2_sample : float
-        Nonlinear refractive index of the sample
-    dz : float
-        Step size in the propagation direction
-    dx : float
-        Step size in the x direction
-    dy : float
-        Step size in the y direction
-    eps : float, optional
-        Small value to avoid division by zero, default is 1e-12
+    for k in range(0, sample.position):
+        phi = single_bpm_step_only_linear_medium(phi, domain.k, domain.dz, domain.dx, domain.dy)
 
-    Returns:
-    -------
-    output_fields : list
-        List of complex fields at each z position after propagation
-    """
-    output_fields = []
+    for k in range(sample.position, sample.position + sample.thickness + 1):
+        phi = single_bpm_step_within_sample(phi, domain.k, sample.k, sample.n2, domain.dz, domain.dx, domain.dy)
 
-    for z_pos in z_positions:
-        # Make a copy of the initial field for this z position
-        current_phi = phi.copy()
+    for k in range(sample.position + sample.thickness + 1, domain.Nz):
+        phi = single_bpm_step_only_linear_medium(phi, domain.k, domain.dz, domain.dx, domain.dy)
 
-        # Calculate propagation distances
-        distance_to_sample = max(0, sample_init_position - z_pos)
-        distance_in_sample = min(sample_thickness, max(0, z_pos + sample_thickness - sample_init_position))
-        distance_after_sample = max(0, z_pos - (sample_init_position + sample_thickness))
+    return phi
 
-        # Propagate to the sample (linear medium)
-        if distance_to_sample > 0:
-            steps_to_sample = int(distance_to_sample / dz)
-            for _ in range(steps_to_sample):
-                current_phi = single_bpm_linear_medium(current_phi, k_medium, dz, dx, dy, eps)
-
-        # Propagate through the sample (nonlinear medium)
-        if distance_in_sample > 0:
-            steps_in_sample = int(distance_in_sample / dz)
-            for _ in range(steps_in_sample):
-                current_phi = single_bpm_step_within_sample(current_phi, k_medium, k_sample, n2_sample, dz, dx, dy, eps)
-
-        # Propagate after the sample (linear medium)
-        if distance_after_sample > 0:
-            steps_after_sample = int(distance_after_sample / dz)
-            for _ in range(steps_after_sample):
-                current_phi = single_bpm_linear_medium(current_phi, k_medium, dz, dx, dy, eps)
-
-        # Store the result for this z position
-        output_fields.append(current_phi)
-
-    return output_fields
+def z_scan(phi0, sample, domain):
+    phi = np.copy(phi0)
+    for sample_position in sample.stops:
+        phi = full_propagation(phi, sample, domain)

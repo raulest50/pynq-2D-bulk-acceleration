@@ -30,18 +30,20 @@ dy = y[1] - y[0]
 # Perfil gaussiano 2D en z = 0
 # ---------------------------------------------------
 r2 = X**2 + Y**2
-E0 = np.exp(-r2 / w0**2)   # E(x,y; z=0)
+f =  2 # 5mm
+#E0 = np.exp(-r2 / w0**2)   # E(x,y; z=0) # sin lente
+E0 = np.exp(-r2/w0**2) * np.exp(-1j * k * r2/(2*f)) # con lente
 
 # ---------------------------------------------------
 # Definición de z y paso en z
 # ---------------------------------------------------
 zR = np.pi * w0**2 / lambda0
 z_min = 0.0
-z_max = 5 * zR * 4     # Propagar hasta 5 Rayleigh
-n_frames = 100
+z_max = 5 * zR * 2    # Propagar hasta 5 Rayleigh
+n_frames = 1000
 z_vals = np.linspace(z_min, z_max, n_frames)
 dz = z_vals[1] - z_vals[0]
-
+print(f"z_max = {z_max}")
 # ---------------------------------------------------
 # Construcción de matrices tridiagonales
 # ---------------------------------------------------

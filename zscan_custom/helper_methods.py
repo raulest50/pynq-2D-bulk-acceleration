@@ -66,3 +66,32 @@ def plot_beam_profile(Ex, x, y):
     plt.axis('equal')
     plt.tight_layout()
     plt.show()
+
+
+def apply_lens(E_in: np.ndarray,
+               X: np.ndarray,
+               Y: np.ndarray,
+               k: float,
+               f: float) -> np.ndarray:
+    """
+    Simula una lente delgada de focal f aplicando la fase cuadrática al frente de onda.
+
+    Parámetros:
+    -----------
+    E_in : ndarray (Ny x Nx, complejo)
+        Campo complejo antes de la lente.
+    X, Y : ndarray (Ny x Nx)
+        Coordenadas transversales en m (meshgrid).
+    k    : float
+        Número de onda 2π/λ·n (m^-1) en el medio donde está la lente.
+    f    : float
+        Distancia focal de la lente en m.
+
+    Retorna:
+    --------
+    E_out : ndarray (Ny x Nx, complejo)
+        Campo complejo justo después de la lente.
+    """
+    # fase parabólica de lente delgada
+    phi_lens = np.exp(-1j * k / (2 * f) * (X**2 + Y**2))
+    return E_in * phi_lens

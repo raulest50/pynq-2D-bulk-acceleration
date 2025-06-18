@@ -1,9 +1,10 @@
 from helper_methods import gaussian_beam_profile
-from zscan_custom.helper_methods import plot_beam_profile
+from zscan_custom.helper_methods import plot_beam_profile, apply_lens
 import numpy as np
 import materials
+from types import SimpleNamespace as Namespace
 
-from zscan_custom.operator_solvers import single_z_scan
+from zscan_custom.operator_solvers import z_scan
 
 # Parámetros del láser Carmel X-780
 wavelength = 780e-9       # 780 nm
@@ -44,5 +45,27 @@ print(f"stops muestra (indices del vector z): {stops}")
 k_air = 2 * 3.141592653589793 / wavelength * n_air
 k_sample = 2 * 3.141592653589793 / wavelength * n_sample
 
-for sz in stops:
-    single_z_scan(Ex, 1, 10)
+domain = Namespace(
+    Nx = Nx,
+    Ny = Ny,
+    Nz = Nz,
+    dx = x[1] - x[0],
+    dy = y[1] - y[0],
+    dz = dz,
+    k_medium = k_air,
+    eps = 1e-12,
+)
+
+sample = Namespace(
+    thickness = Nsz * dz,
+    n0 = n_sample,
+    n2 = n2_sample,
+    stops = stops,
+    k = k_sample
+)
+
+plot_beam_profile(Ex, x, y)
+Phi0 = apply_lens(Ex, X, Y, domain.k_medium, 0.1)
+plot_beam_profile(Phi0, x, y)
+
+#T = z_scan(Ex, domain, sample)
