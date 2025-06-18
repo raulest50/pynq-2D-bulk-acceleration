@@ -105,14 +105,9 @@ def compute_b_vector(dp, dp1, dp2, do, x0):
     return b
 
 
-
-def half_nonlinear(phi, k_sample, n2_sample, dz):
-   phase = np.exp( 1j * k_sample * n2_sample * dz/2 *np.abs(phi)**2 )
-   return phase * phi
-
-
 def adi_x(phi, Ny, eps, k, dz, dx):
     ung = 1j * dz / (4 * k * dx**2)
+    phi_inter = np.zeros_like(phi, dtype=complex)
     for j in range(Ny):
 
         if abs(phi[1, j]) < eps:
@@ -125,29 +120,163 @@ def adi_x(phi, Ny, eps, k, dz, dx):
         else:
             ratio_xn = phi[-1, j] / phi[-2, j]
 
-        B[0, 0] = -2 * ung + 1 + ung * ratio_x0
-        B[-1, -1] = -2 * ung + 1 + ung * ratio_xn
-        b = B @ E_prev[:, j]
-        A[0, 0] = 2 * ung + 1 - ung * ratio_x0
-        A[-1, -1] = 2 * ung + 1 - ung * ratio_xn
-        E_inter[:, j] = np.linalg.solve(A, b)
+        dp1_B = -2 * ung + 1 + ung * ratio_x0
+        dp2_B = -2 * ung + 1 + ung * ratio_xn
+        dp_B = -2 * ung + 1
+        do_B = ung
+
+        b = compute_b_vector(dp_B, dp1_B, dp2_B, do_B, phi[:, j])
+
+        dp1_A = 2 * ung + 1 - ung * ratio_x0
+        dp2_A = 2 * ung + 1 - ung * ratio_xn
+        dp_A = 2 * ung + 1
+        do_A = -ung
+
+        phi_inter[:, j] = custom_thomas_solver(dp_A, dp1_A, dp2_A, do_A, b)
+
+    return phi_inter
 
 
-def adi_y(phi):
-    pass
+def adi_y(phi, Nx, eps, k, dz, dy):
+    ung = 1j * dz / (4 * k * dy**2)
+    phi_inter = np.zeros_like(phi, dtype=complex)
+    for i in range(Nx):
+
+        if abs(phi[i, 1]) < eps:
+            ratio_y0 = 1.0
+        else:
+            ratio_y0 = phi[i, 0] / phi[i, 1]
+
+        if abs(phi[i, -2]) < eps:
+            ratio_yn = 1.0
+        else:
+            ratio_yn = phi[i, -1] / phi[i, -2]
+
+        dp1_B = -2 * ung + 1 + ung * ratio_y0
+        dp2_B = -2 * ung + 1 + ung * ratio_yn
+        dp_B = -2 * ung + 1
+        do_B = ung
+
+        b = compute_b_vector(dp_B, dp1_B, dp2_B, do_B, phi[i, :])
+
+        dp1_A = 2 * ung + 1 - ung * ratio_y0
+        dp2_A = 2 * ung + 1 - ung * ratio_yn
+        dp_A = 2 * ung + 1
+        do_A = -ung
+
+        phi_inter[i, :] = custom_thomas_solver(dp_A, dp1_A, dp2_A, do_A, b)
+
+    return phi_inter
 
 
-def single_bpm_step_within_sample(phi, k_medium, k_sample, n2_sample, dz):
-    phi_inter = adi_x(phi)
+def half_nonlinear(phi, k_sample, n2_sample, dz):
+   phase = np.exp( 1j * k_sample * n2_sample * dz/2 *np.abs(phi)**2 )
+   return phase * phi
+
+
+def single_bpm_step_within_sample(phi, k_medium, k_sample, n2_sample, dz, dx, dy, eps=1e-12):
+    Ny, Nx = phi.shape
+    phi_inter = adi_x(phi, Ny, eps, k_medium, dz, dx)
     phi_inter = half_nonlinear(phi_inter, k_sample, n2_sample, dz)
-    phi_inter = adi_y(phi_inter)
+    phi_inter = adi_y(phi_inter, Nx, eps, k_medium, dz, dy)
     phi_inter = half_nonlinear(phi_inter, k_medium, n2_sample, dz)
     return phi_inter
 
 
-def single_bpm_linear_medium(phi):
-    pass
+def single_bpm_linear_medium(phi, k_medium, dz, dx, dy, eps=1e-12):
+    """
+    Performs a single BPM step in a linear medium (without nonlinear effects).
+
+    Parameters:
+    ----------
+    phi : numpy.ndarray
+        Input complex field
+    k_medium : float
+        Wave number in the medium
+    dz : float
+        Step size in the propagation direction
+    dx : float
+        Step size in the x direction
+    dy : float
+        Step size in the y direction
+    eps : float, optional
+        Small value to avoid division by zero, default is 1e-12
+
+    Returns:
+    -------
+    phi_out : numpy.ndarray
+        Output complex field after propagation
+    """
+    Ny, Nx = phi.shape
+    phi_inter = adi_x(phi, Ny, eps, k_medium, dz, dx)
+    phi_out = adi_y(phi_inter, Nx, eps, k_medium, dz, dy)
+    return phi_out
 
 
-def single_z_scan(phi, sample_init_position, sample_tickness):
-    pass
+def single_z_scan(phi, sample_init_position, sample_thickness, z_positions, k_medium, k_sample, n2_sample, dz, dx, dy, eps=1e-12):
+    """
+    Simulates a z-scan experiment by propagating the beam through a sample at different z positions.
+
+    Parameters:
+    ----------
+    phi : numpy.ndarray
+        Initial complex field
+    sample_init_position : float
+        Initial position of the sample along z-axis
+    sample_thickness : float
+        Thickness of the sample
+    z_positions : numpy.ndarray
+        Array of z positions for the scan
+    k_medium : float
+        Wave number in the surrounding medium
+    k_sample : float
+        Wave number in the sample
+    n2_sample : float
+        Nonlinear refractive index of the sample
+    dz : float
+        Step size in the propagation direction
+    dx : float
+        Step size in the x direction
+    dy : float
+        Step size in the y direction
+    eps : float, optional
+        Small value to avoid division by zero, default is 1e-12
+
+    Returns:
+    -------
+    output_fields : list
+        List of complex fields at each z position after propagation
+    """
+    output_fields = []
+
+    for z_pos in z_positions:
+        # Make a copy of the initial field for this z position
+        current_phi = phi.copy()
+
+        # Calculate propagation distances
+        distance_to_sample = max(0, sample_init_position - z_pos)
+        distance_in_sample = min(sample_thickness, max(0, z_pos + sample_thickness - sample_init_position))
+        distance_after_sample = max(0, z_pos - (sample_init_position + sample_thickness))
+
+        # Propagate to the sample (linear medium)
+        if distance_to_sample > 0:
+            steps_to_sample = int(distance_to_sample / dz)
+            for _ in range(steps_to_sample):
+                current_phi = single_bpm_linear_medium(current_phi, k_medium, dz, dx, dy, eps)
+
+        # Propagate through the sample (nonlinear medium)
+        if distance_in_sample > 0:
+            steps_in_sample = int(distance_in_sample / dz)
+            for _ in range(steps_in_sample):
+                current_phi = single_bpm_step_within_sample(current_phi, k_medium, k_sample, n2_sample, dz, dx, dy, eps)
+
+        # Propagate after the sample (linear medium)
+        if distance_after_sample > 0:
+            steps_after_sample = int(distance_after_sample / dz)
+            for _ in range(steps_after_sample):
+                current_phi = single_bpm_linear_medium(current_phi, k_medium, dz, dx, dy, eps)
+
+        # Store the result for this z position
+        output_fields.append(current_phi)
+
+    return output_fields
