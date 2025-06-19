@@ -1,8 +1,19 @@
-# Try to import using relative imports (when running directly from zscan_custom directory)
+# Handle imports for both direct execution and module import
+import sys
+import os
 
-from helper_methods import gaussian_beam_profile, plot_beam_profile, plot_beam_propagation, apply_lens
-import materials
-from operator_solvers import z_scan, full_propagation_without_sample
+# Try to import using absolute imports (when running as a module)
+try:
+    from zscan_custom.helper_methods import plot_beam_profile, plot_beam_propagation, apply_lens, compute_E0, assess_intensity_zscan, gaussian_beam_profile_physical, apply_lens_abcd
+    import zscan_custom.materials as materials
+    from zscan_custom.operator_solvers import z_scan, full_propagation_without_sample
+# If that fails, try relative imports (when running directly)
+except ModuleNotFoundError:
+    # Add parent directory to path so Python can find the zscan_custom package
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+    from zscan_custom.helper_methods import plot_beam_profile, plot_beam_propagation, apply_lens, compute_E0, assess_intensity_zscan, gaussian_beam_profile_physical, apply_lens_abcd
+    import zscan_custom.materials as materials
+    from zscan_custom.operator_solvers import z_scan, full_propagation_without_sample
 
 
 
@@ -10,17 +21,26 @@ import numpy as np
 from types import SimpleNamespace as Namespace
 
 # Parámetros del láser Carmel X-780
-wavelength = 780e-9       # 780 nm
-w0 = 2e-3              # Radio del haz en z = 0 (0.625 mm)
-E0 = 1.0                   # Amplitud normalizada
-Nx = 46                   # Resolución en x
-Ny = 46                   # Resolución en y
+wavelength = 780e-9    # m longitud onda
+w0         = 0.625e-3  # m beam waist
+P_avg      = 1.0       # W
+f_rep      = 80e6      # Hz
+tau        = 90e-15    # s
 
-Lx = 10e-3
-Ly = 10e-3
+# 1) Calcula E0
+E0 = compute_E0(P_avg, f_rep, tau, w0)
+print(f"E0: {E0} V/m")
+
+
+Nx = 64                   # Resolución en x
+Ny = 64                   # Resolución en y
+
+Lx = 2e-3
+Ly = 2e-3
 
 # Generar haz gaussiano
-Ex, x, y, X, Y = gaussian_beam_profile(w0, E0, Nx, Ny, Lx, Ly)
+Ex, x, y, X, Y = gaussian_beam_profile_physical(wavelength, w0, E0, Nx, Ny, Lx, Ly)
+
 Lx=x[-1]
 Ly=y[-1]
 print(f"ancho de dominio en x: {Lx*1e6} um \n ancho de dominio en y: {Ly*1e6} um")
@@ -70,10 +90,15 @@ sample = Namespace(
     k = k_sample
 )
 
-f = 0.25
+assess_intensity_zscan(Ex, sample)
 
-desired_gain = 1.5
-amp_gain = np.sqrt(desired_gain)    # ≈1.225
+f = 0.15
+
+# desired_gain = 1.5
+# amp_gain = np.sqrt(desired_gain)    # ≈1.225
+
+# Phi0 = Ex
+# Phi0 = apply_lens_abcd(Ex, X, Y, wavelength, f)
 
 Phi0 = apply_lens(
     Ex, X, Y,

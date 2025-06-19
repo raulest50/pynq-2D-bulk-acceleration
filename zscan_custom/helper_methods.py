@@ -1,10 +1,12 @@
+import types
+
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import Slider
 from mpl_toolkits.mplot3d import Axes3D
 
 
-def gaussian_beam_profile(w0: float,
+def gaussian_beam_profile_old(w0: float,
                           E0: float,
                           Nx: int,
                           Ny: int,
@@ -54,6 +56,66 @@ def gaussian_beam_profile(w0: float,
     Ex = E0 * np.exp(-r2 / w0**2).astype(np.complex128)
 
     return Ex, x, y, X, Y
+
+
+def gaussian_beam_profile_physical(
+    wavelength: float,
+    w0: float,
+    E0: float,
+    Nx: int,
+    Ny: int,
+    Lx: float = None,
+    Ly: float = None
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Genera U(x,y) de un haz gaussiano TEM00 usando parámetros físicos.
+
+    Parámetros:
+    - wavelength: longitud de onda λ (m)
+    - w0: cintura del haz (m)
+    - E0: amplitud pico del campo (V/m)
+    - Nx, Ny: puntos en x e y
+    - Lx, Ly: tamaño de dominio (m). Por defecto 6·w0.
+    """
+    if Lx is None: Lx = 6 * w0
+    if Ly is None: Ly = 6 * w0
+
+    x = np.linspace(-Lx/2, Lx/2, Nx)
+    y = np.linspace(-Ly/2, Ly/2, Ny)
+    X, Y = np.meshgrid(x, y)
+    r2 = X**2 + Y**2
+
+    # Perfil gaussiano: E0·exp(–r²/w0²) (modo TEM00) :contentReference[oaicite:8]{index=8} :contentReference[oaicite:9]{index=9}
+    Ex = E0 * np.exp(-r2 / w0**2).astype(np.complex128)
+    return Ex, x, y, X, Y
+
+
+def compute_E0(P_avg: float, f_rep: float, tau: float, w0: float) -> float:
+    """
+    Calcula la amplitud pico E0 del campo eléctrico (V/m) para un haz gaussiano.
+
+    Parámetros:
+    - P_avg: potencia promedio del láser (W)
+    - f_rep: tasa de repetición (Hz)
+    - tau: duración de pulso FWHM (s)
+    - w0: radio de cintura del haz (m)
+
+    Retorna:
+    - E0: amplitud pico (V/m)
+    """
+    # Energía y potencia pico según Sheik-Bahae et al. :contentReference[oaicite:5]{index=5}
+    E_pulse = P_avg / f_rep
+    P_peak = E_pulse / tau
+
+    # Intensidad pico en el foco de un haz gaussiano :contentReference[oaicite:6]{index=6}
+    I0 = 2 * P_peak / (np.pi * w0 ** 2)
+
+    # Relación I ↔ campo en vacío :contentReference[oaicite:7]{index=7}
+    c = 3e8  # m/s
+    eps0 = 8.854e-12  # F/m
+    E0 = np.sqrt(2 * I0 / (c * eps0))
+
+    return E0
 
 
 def plot_beam_profile(Ex, x, y):
@@ -205,3 +267,66 @@ def plot_beam_propagation(phi_history, x, y, dz, cmap='inferno'):
     plt.show()
 
     return fig, ax, z_slider
+
+
+def apply_lens_abcd(
+        E_in: np.ndarray,
+        X: np.ndarray,
+        Y: np.ndarray,
+        wavelength: float,
+        f: float
+) -> np.ndarray:
+    """
+    Aplica una lente delgada basada en la ley ABCD (Saleh & Teich, Cap. 3.2).
+
+    Parámetros:
+    - U_in: campo complejo de entrada
+    - X, Y: mallas espaciales
+    - wavelength: λ en m
+    - f: distancia focal de la lente en m
+
+    Teoría: la q-parameter se transforma según
+      q_out = (A·q_in + B) / (C·q_in + D)
+    con matriz de lente delgada A=1, B=0, C=-1/f, D=1 :contentReference[oaicite:11]{index=11} :contentReference[oaicite:12]{index=12}.
+    """
+    k = 2 * np.pi / wavelength
+    # Fase parabólica: exp(-i·k/(2f)·(x²+y²))
+    phi = np.exp(-1j * k / (2 * f) * (X ** 2 + Y ** 2))
+    return E_in * phi
+
+
+def intensity_from_field(U: np.ndarray,
+                         c: float = 3e8,
+                         epsilon0: float = 8.854e-12) -> np.ndarray:
+    """
+    Convierte U(x,y) en I(x,y) = ½·c·ε0·|U|² (W/m²).
+    """
+    return 0.5 * c * epsilon0 * np.abs(U)**2
+
+
+def assess_intensity_zscan(
+        Ex: np.ndarray,
+        sample: types.SimpleNamespace
+) -> None:
+    """
+    Evalúa si I_peak es suficiente para medir n2 por Z-scan.
+
+    Parámetros:
+    - U: perfil de campo complejo
+    - material: clave en MATERIAL_PARAMS, e.g. "CS2"
+    - sample: diccionario con n2, etc.
+    """
+    # 1) Intensidad local
+    I = intensity_from_field(Ex)
+    I_peak = I.max()
+
+    # 2) Coeficiente n2 del medio
+    n2 = sample.n2
+
+    # 3) Umbral práctico para Z-scan (1e11–1e12 W/m²) :contentReference[oaicite:15]{index=15}
+    if I_peak >= 1e11:
+        print(f"I_peak = {I_peak:.2e} W/m² → intensidad suficiente para Z-scan cerrado (n2 ≃ {n2:.2e}).")
+    else:
+        print(f"I_peak = {I_peak:.2e} W/m² → intensidad insuficiente; considerar enfoque más fuerte o pulso más corto.")
+
+
