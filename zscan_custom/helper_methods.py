@@ -4,8 +4,7 @@ from matplotlib.widgets import Slider
 from mpl_toolkits.mplot3d import Axes3D
 
 
-def gaussian_beam_profile(wavelength: float,
-                          w0: float,
+def gaussian_beam_profile(w0: float,
                           E0: float,
                           Nx: int,
                           Ny: int,
@@ -74,29 +73,33 @@ def apply_lens(E_in: np.ndarray,
                X: np.ndarray,
                Y: np.ndarray,
                k: float,
-               f: float) -> np.ndarray:
+               f: float,
+               strength: float = 1.0,
+               amp_gain: float = 1.0,
+               aperture: float | None = None) -> np.ndarray:
     """
-    Simula una lente delgada de focal f aplicando la fase cuadrática al frente de onda.
+    Simula una lente delgada con parámetros extra:
 
-    Parámetros:
-    -----------
-    E_in : ndarray (Ny x Nx, complejo)
-        Campo complejo antes de la lente.
-    X, Y : ndarray (Ny x Nx)
-        Coordenadas transversales en m (meshgrid).
-    k    : float
-        Número de onda 2π/λ·n (m^-1) en el medio donde está la lente.
-    f    : float
-        Distancia focal de la lente en m.
-
-    Retorna:
-    --------
-    E_out : ndarray (Ny x Nx, complejo)
-        Campo complejo justo después de la lente.
+    - f         : focal (m) donde quieres el foco
+    - strength  : factor sobre la curvatura de fase (f_eff = f/strength)
+    - amp_gain  : factor de escalado global de amplitud (Intensity → amp_gain^2)
+    - aperture  : diámetro de la lente (m). Si no es None, todo r > aperture/2 se bloquea.
     """
-    # fase parabólica de lente delgada
-    phi_lens = np.exp(-1j * k / (2 * f) * (X**2 + Y**2))
-    return E_in * phi_lens
+    # 1) fase parabólica con “fuerza” ajustable
+    phi = np.exp(-1j * k * strength / (2 * f) * (X ** 2 + Y ** 2))
+
+    # 2) aplicamos la lente
+    E_out = E_in * phi
+
+    # 3) ganancia de amplitud fija (para lograr cualquier aumento de intensidad)
+    E_out *= amp_gain
+
+    # 4) máscara de diafragma (opcional)
+    if aperture is not None:
+        mask = (X ** 2 + Y ** 2) <= (aperture / 2) ** 2
+        E_out *= mask
+
+    return E_out
 
 
 def plot_beam_propagation(phi_history, x, y, dz, cmap='inferno'):

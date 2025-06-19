@@ -1,28 +1,26 @@
 # Try to import using relative imports (when running directly from zscan_custom directory)
-try:
-    from helper_methods import gaussian_beam_profile, plot_beam_profile, plot_beam_propagation
-    import materials
-    from operator_solvers import z_scan, full_propagation_without_sample
-    print("Using relative imports")
-# If that fails, try absolute imports (when running as a module from parent directory)
-except ImportError:
-    from zscan_custom.helper_methods import gaussian_beam_profile, plot_beam_profile, plot_beam_propagation
-    from zscan_custom import materials
-    from zscan_custom.operator_solvers import z_scan, full_propagation_without_sample
-    print("Using absolute imports")
+
+from helper_methods import gaussian_beam_profile, plot_beam_profile, plot_beam_propagation, apply_lens
+import materials
+from operator_solvers import z_scan, full_propagation_without_sample
+
+
 
 import numpy as np
 from types import SimpleNamespace as Namespace
 
 # Parámetros del láser Carmel X-780
 wavelength = 780e-9       # 780 nm
-w0 = 0.625e-3              # Radio del haz en z = 0 (0.625 mm)
+w0 = 2e-3              # Radio del haz en z = 0 (0.625 mm)
 E0 = 1.0                   # Amplitud normalizada
 Nx = 46                   # Resolución en x
 Ny = 46                   # Resolución en y
 
+Lx = 10e-3
+Ly = 10e-3
+
 # Generar haz gaussiano
-Ex, x, y, X, Y = gaussian_beam_profile(wavelength, w0, E0, Nx, Ny)
+Ex, x, y, X, Y = gaussian_beam_profile(w0, E0, Nx, Ny, Lx, Ly)
 Lx=x[-1]
 Ly=y[-1]
 print(f"ancho de dominio en x: {Lx*1e6} um \n ancho de dominio en y: {Ly*1e6} um")
@@ -32,7 +30,7 @@ print(f"ancho de dominio en x: {Lx*1e6} um \n ancho de dominio en y: {Ly*1e6} um
 
 # Parametros simulacion z-scan
 Nz = 600
-Lz = 2 # 60 centimetros
+Lz = 0.6 # 60 centimetros
 z = np.linspace(0, Lz, Nz)
 n_air = 1.003
 n_sample = materials.MATERIAL_PARAMS["CS2"]["n0"]
@@ -72,13 +70,23 @@ sample = Namespace(
     k = k_sample
 )
 
-#plot_beam_profile(Ex, x, y)
-#Phi0 = apply_lens(Ex, X, Y, domain.k_medium, 0.1)
-#plot_beam_profile(Phi0, x, y)
+f = 0.25
+
+desired_gain = 1.5
+amp_gain = np.sqrt(desired_gain)    # ≈1.225
+
+Phi0 = apply_lens(
+    Ex, X, Y,
+    k       = domain.k_medium,
+    f       = f,        # 25 cm
+    strength= 0.5,         # focal efectiva = f/strength = 0.25 m
+    amp_gain= 1.1,    # intensidad×1.5
+    aperture=None          # o p.ej. 6*w0 para una lente de 6·waist de diámetro
+)
 
 #T = z_scan(Ex, domain, sample)
 
-phi, phi_history = full_propagation_without_sample(Ex, domain)
+phi, phi_history = full_propagation_without_sample(Phi0, domain)
 
 plot_beam_propagation(phi_history, x, y, dz)
 print(f"dimensiones phi_history: {phi_history.shape}")
