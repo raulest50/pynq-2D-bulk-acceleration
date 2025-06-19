@@ -1,10 +1,18 @@
-from helper_methods import gaussian_beam_profile
-from zscan_custom.helper_methods import plot_beam_profile, apply_lens
-import numpy as np
-import materials
-from types import SimpleNamespace as Namespace
+# Try to import using relative imports (when running directly from zscan_custom directory)
+try:
+    from helper_methods import gaussian_beam_profile, plot_beam_profile, plot_beam_propagation
+    import materials
+    from operator_solvers import z_scan, full_propagation_without_sample
+    print("Using relative imports")
+# If that fails, try absolute imports (when running as a module from parent directory)
+except ImportError:
+    from zscan_custom.helper_methods import gaussian_beam_profile, plot_beam_profile, plot_beam_propagation
+    from zscan_custom import materials
+    from zscan_custom.operator_solvers import z_scan, full_propagation_without_sample
+    print("Using absolute imports")
 
-from zscan_custom.operator_solvers import z_scan
+import numpy as np
+from types import SimpleNamespace as Namespace
 
 # Parámetros del láser Carmel X-780
 wavelength = 780e-9       # 780 nm
@@ -24,7 +32,7 @@ print(f"ancho de dominio en x: {Lx*1e6} um \n ancho de dominio en y: {Ly*1e6} um
 
 # Parametros simulacion z-scan
 Nz = 600
-Lz = 0.6 # 60 centimetros
+Lz = 2 # 60 centimetros
 z = np.linspace(0, Lz, Nz)
 n_air = 1.003
 n_sample = materials.MATERIAL_PARAMS["CS2"]["n0"]
@@ -64,8 +72,13 @@ sample = Namespace(
     k = k_sample
 )
 
-plot_beam_profile(Ex, x, y)
-Phi0 = apply_lens(Ex, X, Y, domain.k_medium, 0.1)
-plot_beam_profile(Phi0, x, y)
+#plot_beam_profile(Ex, x, y)
+#Phi0 = apply_lens(Ex, X, Y, domain.k_medium, 0.1)
+#plot_beam_profile(Phi0, x, y)
 
 #T = z_scan(Ex, domain, sample)
+
+phi, phi_history = full_propagation_without_sample(Ex, domain)
+
+plot_beam_propagation(phi_history, x, y, dz)
+print(f"dimensiones phi_history: {phi_history.shape}")

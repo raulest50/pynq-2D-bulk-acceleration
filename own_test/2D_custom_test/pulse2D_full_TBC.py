@@ -31,8 +31,8 @@ dy = y[1] - y[0]
 # ---------------------------------------------------
 r2 = X**2 + Y**2
 f =  2 # 5mm
-#E0 = np.exp(-r2 / w0**2)   # E(x,y; z=0) # sin lente
-E0 = np.exp(-r2/w0**2) * np.exp(-1j * k * r2/(2*f)) # con lente
+E0 = np.exp(-r2 / w0**2)   # E(x,y; z=0) # sin lente
+#E0 = np.exp(-r2/w0**2) * np.exp(-1j * k * r2/(2*f)) # con lente
 
 # ---------------------------------------------------
 # Definición de z y paso en z

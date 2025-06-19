@@ -79,17 +79,6 @@ def compute_b_vector(dp, dp1, dp2, do, x0):
     n = len(x0)
     b = np.zeros(n, dtype=x0.dtype)
 
-    # Handle edge cases
-    if n == 1:
-        # For a single element, only dp1 (which is also dp2) matters
-        b[0] = dp1 * x0[0]
-        return b
-    elif n == 2:
-        # For two elements, we have a 2x2 matrix
-        b[0] = dp1 * x0[0] + do * x0[1]
-        b[1] = do * x0[0] + dp2 * x0[1]
-        return b
-
     # For n > 2, use the implementation with a for loop
     # First row: b[0] = dp1 * x0[0] + do * x0[1]
     b[0] = dp1 * x0[0] + do * x0[1]
@@ -212,22 +201,54 @@ def single_bpm_step_only_linear_medium(phi, k_medium, dz, dx, dy, eps=1e-12):
     phi_out = adi_y(phi_inter, Nx,   eps, k_medium, dz, dy)
     return phi_out
 
-
-def full_propagation(phi0, sample, domain):
+def full_propagation_with_sample(phi0, sample, domain):
     phi = np.copy(phi0)
 
     for k in range(0, sample.position):
-        phi = single_bpm_step_only_linear_medium(phi, domain.k, domain.dz, domain.dx, domain.dy)
+        phi = single_bpm_step_only_linear_medium(phi, domain.k_medium, domain.dz, domain.dx, domain.dy)
 
     for k in range(sample.position, sample.position + sample.thickness + 1):
-        phi = single_bpm_step_within_sample(phi, domain.k, sample.k, sample.n2, domain.dz, domain.dx, domain.dy)
+        phi = single_bpm_step_within_sample(phi, sample.k, sample.n2, domain.dz, domain.dx, domain.dy, domain.eps)
 
     for k in range(sample.position + sample.thickness + 1, domain.Nz):
-        phi = single_bpm_step_only_linear_medium(phi, domain.k, domain.dz, domain.dx, domain.dy)
+        phi = single_bpm_step_only_linear_medium(phi, domain.k_medium, domain.dz, domain.dx, domain.dy)
 
     return phi
 
+def full_propagation_without_sample(phi0, domain):
+    """
+    Propagates a beam through a medium without a sample, storing the beam profile at each z-step.
+
+    Parameters:
+    ----------
+    phi0 : numpy.ndarray
+        Initial complex field
+    domain : object
+        Domain object containing simulation parameters
+
+    Returns:
+    -------
+    phi : numpy.ndarray
+        Final complex field after propagation
+    phi_history : numpy.ndarray
+        3D array containing the beam profile at each z-step
+    """
+    phi = np.copy(phi0)
+    # Create a 3D array to store all beam profiles
+    phi_history = np.zeros((domain.Nz + 1, *phi0.shape), dtype=complex)
+    # Store initial beam profile
+    phi_history[0] = phi
+
+    for k in range(0, domain.Nz):
+        phi = single_bpm_step_only_linear_medium(phi, domain.k_medium, domain.dz, domain.dx, domain.dy)
+        # Store beam profile at this step
+        phi_history[k + 1] = phi
+
+    return phi, phi_history
+
 def z_scan(phi0, sample, domain):
     phi = np.copy(phi0)
+    phi_stops = np.zeros((domain.Nz + 1, *phi0.shape), dtype=complex)
     for sample_position in sample.stops:
-        phi = full_propagation(phi, sample, domain)
+        phi = full_propagation_with_sample(phi, sample, domain)
+        phi_stops[sample_position] = phi
