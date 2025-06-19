@@ -330,3 +330,25 @@ def assess_intensity_zscan(
         print(f"I_peak = {I_peak:.2e} W/m² → intensidad insuficiente; considerar enfoque más fuerte o pulso más corto.")
 
 
+def compute_transmitance(Ein, Eout):
+    Ii = np.abs(Ein)**2
+    Io = np.abs(Eout)**2
+
+    Pi = np.sum(Ii)
+    Po = np.sum(Io)
+
+    return Po/Pi
+
+
+def plot_transmitance(T, z):
+    # Plot z-scan transmission
+    plt.figure(figsize=(10, 6))
+    plt.plot(z, T, 'b.-')
+    plt.xlabel('z position (m)')
+    plt.ylabel('Transmission')
+    plt.title('Z-scan Transmission')
+    plt.grid(True)
+    plt.show()
+
+
+

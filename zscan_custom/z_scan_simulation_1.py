@@ -1,12 +1,14 @@
 # Handle imports for both direct execution and module import
 import sys
 import os
+from helper_methods import plot_transmitance
 
 # Try to import using absolute imports (when running as a module)
 try:
     from zscan_custom.helper_methods import plot_beam_profile, plot_beam_propagation, apply_lens, compute_E0, assess_intensity_zscan, gaussian_beam_profile_physical, apply_lens_abcd
     import zscan_custom.materials as materials
     from zscan_custom.operator_solvers import z_scan, full_propagation_without_sample
+    import matplotlib.pyplot as plt
 # If that fails, try relative imports (when running directly)
 except ModuleNotFoundError:
     # Add parent directory to path so Python can find the zscan_custom package
@@ -57,14 +59,16 @@ n_sample = materials.MATERIAL_PARAMS["CS2"]["n0"]
 n2_sample = materials.MATERIAL_PARAMS["CS2"]["n2"]
 
 # Parametros de la muestra
-Nsz = 10
+Nsz = 10 # sample thickness expressed as integer number of z steps
 dz = z[1]-z[0]
 
 
 print(f"grosor de la muestra: {Nsz*(dz)*1000} mm")
 print(f"n0 muestra: {n_sample}, n2 muestra: {n2_sample}")
 
-stops = np.arange(0, Nz, Nz // Nsz)
+sample_movs_step_size = 30
+stops = np.arange(10, Nz, sample_movs_step_size)
+
 print(f"stops muestra (indices del vector z): {stops}")
 
 # Parametros Fisicos Modelo BPM
@@ -84,6 +88,7 @@ domain = Namespace(
 
 sample = Namespace(
     thickness = Nsz * dz,
+    thickness_units = Nsz,
     n0 = n_sample,
     n2 = n2_sample,
     stops = stops,
@@ -109,9 +114,10 @@ Phi0 = apply_lens(
     aperture=None          # o p.ej. 6*w0 para una lente de 6·waist de diámetro
 )
 
-#T = z_scan(Ex, domain, sample)
+# T = z_scan(Phi0, sample, domain)
+# print(f" T: {T}")
+# plot_transmitance(T, z[sample.stops])
 
 phi, phi_history = full_propagation_without_sample(Phi0, domain)
-
 plot_beam_propagation(phi_history, x, y, dz)
 print(f"dimensiones phi_history: {phi_history.shape}")

@@ -1,5 +1,5 @@
 import numpy as np
-
+from helper_methods import compute_transmitance
 
 def custom_thomas_solver(dp, dp1, dp2, do, b):
     """
@@ -201,16 +201,31 @@ def single_bpm_step_only_linear_medium(phi, k_medium, dz, dx, dy, eps=1e-12):
     phi_out = adi_y(phi_inter, Nx,   eps, k_medium, dz, dy)
     return phi_out
 
-def full_propagation_with_sample(phi0, sample, domain):
+
+def full_propagation_with_sample(phi0, sample, sample_current_position,domain):
     phi = np.copy(phi0)
 
-    for k in range(0, sample.position):
+    for k in range(0, sample_current_position):
         phi = single_bpm_step_only_linear_medium(phi, domain.k_medium, domain.dz, domain.dx, domain.dy)
 
-    for k in range(sample.position, sample.position + sample.thickness + 1):
+    for k in range(sample_current_position, sample_current_position + sample.thickness_units + 1):
         phi = single_bpm_step_within_sample(phi, sample.k, sample.n2, domain.dz, domain.dx, domain.dy, domain.eps)
 
-    for k in range(sample.position + sample.thickness + 1, domain.Nz):
+    for k in range(sample_current_position + sample.thickness_units + 1, domain.Nz):
+        phi = single_bpm_step_only_linear_medium(phi, domain.k_medium, domain.dz, domain.dx, domain.dy)
+
+    return phi
+
+def full_propagation_with_sample_debug(phi0, sample, sample_current_position,domain):
+    phi = np.copy(phi0)
+
+    for k in range(0, sample_current_position):
+        phi = single_bpm_step_only_linear_medium(phi, domain.k_medium, domain.dz, domain.dx, domain.dy)
+
+    for k in range(sample_current_position, sample_current_position + sample.thickness_units + 1):
+        phi = single_bpm_step_within_sample(phi, sample.k, sample.n2, domain.dz, domain.dx, domain.dy, domain.eps)
+
+    for k in range(sample_current_position + sample.thickness_units + 1, domain.Nz):
         phi = single_bpm_step_only_linear_medium(phi, domain.k_medium, domain.dz, domain.dx, domain.dy)
 
     return phi
@@ -248,7 +263,11 @@ def full_propagation_without_sample(phi0, domain):
 
 def z_scan(phi0, sample, domain):
     phi = np.copy(phi0)
-    phi_stops = np.zeros((domain.Nz + 1, *phi0.shape), dtype=complex)
-    for sample_position in sample.stops:
-        phi = full_propagation_with_sample(phi, sample, domain)
-        phi_stops[sample_position] = phi
+    phi_at_aperture_stops = np.zeros((len(sample.stops), *phi0.shape), dtype=complex)
+    T = np.zeros(len(sample.stops))
+    for v in range(0, len(sample.stops)):
+        phi = full_propagation_with_sample(phi, sample, sample.stops[v], domain)
+        #phi_at_aperture_stops[v] = phi
+        T[v] = compute_transmitance(phi0, phi)
+        print(f"terminada propagacion en z = {sample.stops[v]}")
+    return T
