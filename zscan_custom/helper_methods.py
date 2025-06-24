@@ -269,32 +269,6 @@ def plot_beam_propagation(phi_history, x, y, dz, cmap='inferno'):
     return fig, ax, z_slider
 
 
-def apply_lens_abcd(
-        E_in: np.ndarray,
-        X: np.ndarray,
-        Y: np.ndarray,
-        wavelength: float,
-        f: float
-) -> np.ndarray:
-    """
-    Aplica una lente delgada basada en la ley ABCD (Saleh & Teich, Cap. 3.2).
-
-    Parámetros:
-    - U_in: campo complejo de entrada
-    - X, Y: mallas espaciales
-    - wavelength: λ en m
-    - f: distancia focal de la lente en m
-
-    Teoría: la q-parameter se transforma según
-      q_out = (A·q_in + B) / (C·q_in + D)
-    con matriz de lente delgada A=1, B=0, C=-1/f, D=1 :contentReference[oaicite:11]{index=11} :contentReference[oaicite:12]{index=12}.
-    """
-    k = 2 * np.pi / wavelength
-    # Fase parabólica: exp(-i·k/(2f)·(x²+y²))
-    phi = np.exp(-1j * k / (2 * f) * (X ** 2 + Y ** 2))
-    return E_in * phi
-
-
 def intensity_from_field(U: np.ndarray,
                          c: float = 3e8,
                          epsilon0: float = 8.854e-12) -> np.ndarray:
@@ -344,6 +318,53 @@ def compute_transmitance(Ein, Eout, dx, dy):
     Po = np.sum(Io) * dx * dy
 
     T = Po/Pi
+
+    return T, Pi, Po
+
+def compute_transmitance_physical(Ein: np.ndarray,
+                                  Eout: np.ndarray,
+                                  dx: float,
+                                  dy: float,
+                                  c: float = 3e8,
+                                  eps0: float = 8.854e-12
+                                  ) -> tuple[float, float, float]:
+    """
+    Calcula la transmitancia y las potencias de entrada/salida en unidades físicas (W).
+
+    Parámetros:
+    ----------
+    Ein : np.ndarray
+        Campo eléctrico complejo de entrada (V/m).
+    Eout : np.ndarray
+        Campo eléctrico complejo de salida (V/m).
+    dx : float
+        Espaciado en x (m).
+    dy : float
+        Espaciado en y (m).
+    c : float, opcional
+        Velocidad de la luz en el medio (m/s). Por defecto 3e8.
+    eps0 : float, opcional
+        Permitividad del vacío (F/m). Por defecto 8.854e-12.
+
+    Retorna:
+    -------
+    T : float
+        Transmitancia (adimensional).
+    Pi : float
+        Potencia de entrada (W).
+    Po : float
+        Potencia de salida (W).
+    """
+    # Intensidad [W/m²] a partir de |E|²
+    Ii = 0.5 * c * eps0 * np.abs(Ein)**2
+    Io = 0.5 * c * eps0 * np.abs(Eout)**2
+
+    # Integración sobre el área [m²] → potencia [W]
+    Pi = np.sum(Ii) * dx * dy
+    Po = np.sum(Io) * dx * dy
+
+    # Transmitancia adimensional
+    T = Po / Pi if Pi != 0 else np.nan
 
     return T, Pi, Po
 

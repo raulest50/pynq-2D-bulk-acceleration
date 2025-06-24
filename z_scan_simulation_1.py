@@ -3,9 +3,11 @@
 
 
 from zscan_custom.helper_methods import plot_beam_profile, plot_beam_propagation, apply_lens, compute_E0, \
-    assess_intensity_zscan, gaussian_beam_profile_physical, apply_lens_abcd, compute_transmitance
+    assess_intensity_zscan, gaussian_beam_profile_physical, apply_lens_abcd, compute_transmitance, \
+    compute_transmitance_physical, phase_annular_lens_sigmoid
 import zscan_custom.materials as materials
-from zscan_custom.propagations import z_scan, full_propagation_without_sample, full_propagation_without_sample_wa
+from zscan_custom.propagations import z_scan, full_propagation_without_sample, full_propagation_without_sample_wa, \
+    full_propagation_with_sample, full_propagation_with_sample_debug, apply_lens_truncated
 import time
 import colorama
 from colorama import Fore, Back, Style
@@ -22,7 +24,7 @@ colorama.init()
 # Parámetros del láser Carmel X-780
 wavelength = 780e-9    # m longitud onda
 w0         = 0.625e-3  # m beam waist
-P_avg      = 1.0       # W
+P_avg      = 0.3       # W
 f_rep      = 80e6      # Hz
 tau        = 90e-15    # s
 
@@ -42,8 +44,8 @@ laser_data = [
 print(tabulate(laser_data, headers=["Parámetro", "Valor"], tablefmt="fancy_grid"))
 
 
-Nx = 128                   # Resolución en x
-Ny = 128                   # Resolución en y
+Nx = 64                   # Resolución en x
+Ny = 64                   # Resolución en y
 
 Lx = 2e-3
 Ly = 2e-3
@@ -161,21 +163,38 @@ f = 0.15
 # Phi0 = Ex
 # Phi0 = apply_lens_abcd(Ex, X, Y, wavelength, f)
 
-Phi0 = apply_lens(
-    Ex, X, Y,
-    k       = domain.k_medium,
-    f       = f,        # 25 cm
-    strength= 0.5,         # focal efectiva = f/strength = 0.25 m
-    amp_gain= 1.1,    # intensidad×1.5
-    aperture=None          # o p.ej. 6*w0 para una lente de 6·waist de diámetro
+# Phi0 = apply_lens(Ex, X, Y,
+#     k       = domain.k_medium,
+#     f       = f,        # 25 cm
+#     strength= 0.5,         # focal efectiva = f/strength = 0.25 m
+#     amp_gain= 1.1,    # intensidad×1.5
+#     aperture=None          # o p.ej. 6*w0 para una lente de 6·waist de diámetro
+# )
+
+
+
+σ = 2 * domain.dx       # ancho de transición ~ 2 pasos de malla
+R0 = 2*w0
+
+mask_phase = phase_annular_lens_sigmoid(
+    X, Y,
+    k = k_air,
+    f = f,
+    R0 = R0,
+    σ = σ
 )
+Phi0 = Ex * mask_phase
+
+plot_beam_profile(Phi0, x, y)
+plot_beam_profile(mask_phase, x, y)
 
 # T = z_scan(Phi0, sample, domain)
 # print(f" T: {T}")
 # plot_transmitance(T, z[sample.stops])
 
 start_time = time.time()
-phi, phi_history = full_propagation_without_sample_wa(Phi0, domain)
+#phi, phi_history = full_propagation_with_sample_debug(Phi0, sample, 200, domain)
+phi, phi_history = full_propagation_without_sample(Phi0, domain)
 end_time = time.time()
 execution_time = (end_time-start_time)*1000
 
@@ -185,6 +204,6 @@ print(f"\n{Fore.GREEN}{Style.BRIGHT}⏱️ Tiempo de ejecución: {execution_time
 # Dimensiones con emoji
 print(f"{Fore.GREEN}{Style.BRIGHT}📊 Dimensiones phi_history: {phi_history.shape}{Style.RESET_ALL}")
 
-print(compute_transmitance(phi_history[0], phi_history[-1], domain.dx, domain.dy))
+print(compute_transmitance_physical(phi_history[0], phi_history[-1], domain.dx, domain.dy))
 
 plot_beam_propagation(phi_history, x, y, dz)
