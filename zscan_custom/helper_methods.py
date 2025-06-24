@@ -307,7 +307,7 @@ def intensity_from_field(U: np.ndarray,
 def assess_intensity_zscan(
         Ex: np.ndarray,
         sample: types.SimpleNamespace
-) -> None:
+) -> float:
     """
     Evalúa si I_peak es suficiente para medir n2 por Z-scan.
 
@@ -315,6 +315,9 @@ def assess_intensity_zscan(
     - U: perfil de campo complejo
     - material: clave en MATERIAL_PARAMS, e.g. "CS2"
     - sample: diccionario con n2, etc.
+
+    Returns:
+    - I_peak: valor máximo de intensidad en W/m²
     """
     # 1) Intensidad local
     I = intensity_from_field(Ex)
@@ -324,10 +327,13 @@ def assess_intensity_zscan(
     n2 = sample.n2
 
     # 3) Umbral práctico para Z-scan (1e11–1e12 W/m²) :contentReference[oaicite:15]{index=15}
-    if I_peak >= 1e11:
-        print(f"I_peak = {I_peak:.2e} W/m² → intensidad suficiente para Z-scan cerrado (n2 ≃ {n2:.2e}).")
-    else:
-        print(f"I_peak = {I_peak:.2e} W/m² → intensidad insuficiente; considerar enfoque más fuerte o pulso más corto.")
+    # Comentado para usar formato mejorado en el script principal
+    # if I_peak >= 1e11:
+    #     print(f"I_peak = {I_peak:.2e} W/m² → intensidad suficiente para Z-scan cerrado (n2 ≃ {n2:.2e}).")
+    # else:
+    #     print(f"I_peak = {I_peak:.2e} W/m² → intensidad insuficiente; considerar enfoque más fuerte o pulso más corto.")
+
+    return I_peak
 
 
 def compute_transmitance(Ein, Eout):
@@ -349,6 +355,3 @@ def plot_transmitance(T, z):
     plt.title('Z-scan Transmission')
     plt.grid(True)
     plt.show()
-
-
-
