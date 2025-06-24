@@ -2,9 +2,10 @@
 # from zscan_custom.helper_methods import plot_transmitance
 
 
-from zscan_custom.helper_methods import plot_beam_profile, plot_beam_propagation, apply_lens, compute_E0, assess_intensity_zscan, gaussian_beam_profile_physical, apply_lens_abcd
+from zscan_custom.helper_methods import plot_beam_profile, plot_beam_propagation, apply_lens, compute_E0, \
+    assess_intensity_zscan, gaussian_beam_profile_physical, apply_lens_abcd, compute_transmitance
 import zscan_custom.materials as materials
-from zscan_custom.propagations import z_scan, full_propagation_without_sample
+from zscan_custom.propagations import z_scan, full_propagation_without_sample, full_propagation_without_sample_wa
 import time
 import colorama
 from colorama import Fore, Back, Style
@@ -55,6 +56,7 @@ Ly=y[-1]
 
 # Parametros Fisicos Modelo BPM
 n_air = 1.003
+alpha_air = materials.MATERIAL_PARAMS["Air"]["alpha"]
 k_air = 2 * 3.141592653589793 / wavelength * n_air
 
 # Información del dominio como tabla
@@ -124,6 +126,7 @@ domain = Namespace(
     dy = y[1] - y[0],
     dz = dz,
     k_medium = k_air,
+    alpha = alpha_air,
     eps = 1e-12,
 )
 
@@ -172,7 +175,7 @@ Phi0 = apply_lens(
 # plot_transmitance(T, z[sample.stops])
 
 start_time = time.time()
-phi, phi_history = full_propagation_without_sample(Phi0, domain)
+phi, phi_history = full_propagation_without_sample_wa(Phi0, domain)
 end_time = time.time()
 execution_time = (end_time-start_time)*1000
 
@@ -181,5 +184,7 @@ print(f"\n{Fore.GREEN}{Style.BRIGHT}⏱️ Tiempo de ejecución: {execution_time
 
 # Dimensiones con emoji
 print(f"{Fore.GREEN}{Style.BRIGHT}📊 Dimensiones phi_history: {phi_history.shape}{Style.RESET_ALL}")
+
+print(compute_transmitance(phi_history[0], phi_history[-1], domain.dx, domain.dy))
 
 plot_beam_propagation(phi_history, x, y, dz)

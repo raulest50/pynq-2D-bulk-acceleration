@@ -157,6 +157,72 @@ def adi_y(phi, Nx, eps, k, dz, dy):
     return phi_inter
 
 
+def adi_x_wa(phi, Ny, eps, k, dz, dx, alpha):
+    ung = 1j * dz / (4 * k * dx**2)
+    a = dz * alpha / 8
+    phi_inter = np.zeros_like(phi, dtype=complex)
+    for j in range(Ny):
+
+        if abs(phi[1, j]) < eps:
+            ratio_x0 = 1.0
+        else:
+            ratio_x0 = phi[0, j] / phi[1, j]
+
+        if abs(phi[-2, j]) < eps:
+            ratio_xn = 1.0
+        else:
+            ratio_xn = phi[-1, j] / phi[-2, j]
+
+        dp1_B = -2 * ung + 1 + ung * ratio_x0 - a
+        dp2_B = -2 * ung + 1 + ung * ratio_xn - a
+        dp_B = -2 * ung + 1 - a
+        do_B = ung
+
+        b = compute_b_vector(dp_B, dp1_B, dp2_B, do_B, phi[:, j])
+
+        dp1_A = 2 * ung + 1 - ung * ratio_x0 + a
+        dp2_A = 2 * ung + 1 - ung * ratio_xn + a
+        dp_A = 2 * ung + 1 + a
+        do_A = -ung
+
+        phi_inter[:, j] = custom_thomas_solver(dp_A, dp1_A, dp2_A, do_A, b)
+
+    return phi_inter
+
+
+def adi_y_wa(phi, Nx, eps, k, dz, dy, alpha):
+    ung = 1j * dz / (4 * k * dy**2)
+    a = dz * alpha / 8
+    phi_inter = np.zeros_like(phi, dtype=complex)
+    for i in range(Nx):
+
+        if abs(phi[i, 1]) < eps:
+            ratio_y0 = 1.0
+        else:
+            ratio_y0 = phi[i, 0] / phi[i, 1]
+
+        if abs(phi[i, -2]) < eps:
+            ratio_yn = 1.0
+        else:
+            ratio_yn = phi[i, -1] / phi[i, -2]
+
+        dp1_B = -2 * ung + 1 + ung * ratio_y0 - a
+        dp2_B = -2 * ung + 1 + ung * ratio_yn - a
+        dp_B = -2 * ung + 1 - a
+        do_B = ung
+
+        b = compute_b_vector(dp_B, dp1_B, dp2_B, do_B, phi[i, :])
+
+        dp1_A = 2 * ung + 1 - ung * ratio_y0 + a
+        dp2_A = 2 * ung + 1 - ung * ratio_yn + a
+        dp_A = 2 * ung + 1 + a
+        do_A = -ung
+
+        phi_inter[i, :] = custom_thomas_solver(dp_A, dp1_A, dp2_A, do_A, b)
+
+    return phi_inter
+
+
 def half_nonlinear(phi, k_sample, n2_sample, dz):
    phase = np.exp( 1j * k_sample * n2_sample * dz/2 *np.abs(phi)**2 )
    return phase * phi
@@ -198,6 +264,35 @@ def single_bpm_step_only_linear_medium(phi, k_medium, dz, dx, dy, eps=1e-12):
     Ny, Nx = phi.shape
     phi_inter = adi_x(phi, Ny, eps, k_medium, dz, dx)
     phi_out = adi_y(phi_inter, Nx,   eps, k_medium, dz, dy)
+    return phi_out
+
+def single_bpm_step_only_linear_medium_wa(phi, k_medium, dz, dx, dy, eps, alpha):
+    """
+    Performs a single BPM step in a linear medium (without nonlinear effects).
+
+    Parameters:
+    ----------
+    phi : numpy.ndarray
+        Input complex field
+    k_medium : float
+        Wave number in the medium
+    dz : float
+        Step size in the propagation direction
+    dx : float
+        Step size in the x direction
+    dy : float
+        Step size in the y direction
+    eps : float, optional
+        Small value to avoid division by zero, default is 1e-12
+
+    Returns:
+    -------
+    phi_out : numpy.ndarray
+        Output complex field after propagation
+    """
+    Ny, Nx = phi.shape
+    phi_inter = adi_x_wa(phi, Ny, eps, k_medium, dz, dx, alpha)
+    phi_out = adi_y_wa(phi_inter, Nx,   eps, k_medium, dz, dy, alpha)
     return phi_out
 
 

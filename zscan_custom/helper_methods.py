@@ -336,14 +336,16 @@ def assess_intensity_zscan(
     return I_peak
 
 
-def compute_transmitance(Ein, Eout):
+def compute_transmitance(Ein, Eout, dx, dy):
     Ii = np.abs(Ein)**2
     Io = np.abs(Eout)**2
 
-    Pi = np.sum(Ii)
-    Po = np.sum(Io)
+    Pi = np.sum(Ii) * dx * dy
+    Po = np.sum(Io) * dx * dy
 
-    return Po/Pi
+    T = Po/Pi
+
+    return T, Pi, Po
 
 
 def plot_transmitance(T, z):

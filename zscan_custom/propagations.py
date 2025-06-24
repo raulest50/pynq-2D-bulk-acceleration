@@ -1,7 +1,7 @@
 import numpy as np
 
 from zscan_custom.operadores_solvers import single_bpm_step_only_linear_medium, \
-    single_bpm_step_within_sample
+    single_bpm_step_within_sample, single_bpm_step_only_linear_medium_wa
 
 
 def z_scan(phi0, sample, domain):
@@ -42,6 +42,38 @@ def full_propagation_without_sample(phi0, domain):
 
     for k in range(0, domain.Nz):
         phi = single_bpm_step_only_linear_medium(phi, domain.k_medium, domain.dz, domain.dx, domain.dy)
+        # Store beam profile at this step
+        phi_history[k + 1] = phi
+
+    return phi, phi_history
+
+
+def full_propagation_without_sample_wa(phi0, domain):
+    """
+    Propagates a beam through a medium without a sample, storing the beam profile at each z-step.
+
+    Parameters:
+    ----------
+    phi0 : numpy.ndarray
+        Initial complex field
+    domain : object
+        Domain object containing simulation parameters
+
+    Returns:
+    -------
+    phi : numpy.ndarray
+        Final complex field after propagation
+    phi_history : numpy.ndarray
+        3D array containing the beam profile at each z-step
+    """
+    phi = np.copy(phi0)
+    # Create a 3D array to store all beam profiles
+    phi_history = np.zeros((domain.Nz + 1, *phi0.shape), dtype=complex)
+    # Store initial beam profile
+    phi_history[0] = phi
+
+    for k in range(0, domain.Nz):
+        phi = single_bpm_step_only_linear_medium_wa(phi, domain.k_medium, domain.dz, domain.dx, domain.dy, 1e-12,domain.alpha)
         # Store beam profile at this step
         phi_history[k + 1] = phi
 
