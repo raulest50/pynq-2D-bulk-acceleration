@@ -9,7 +9,7 @@ class Lente:
     def __init__(self, w_min: float, lamda_laser: float, foco: float):
         self.w_min = w_min
         self.lamda_laser = lamda_laser
-        self.z_0 = np.pi*self.w_min**2/lamda_laser
+        self.z_0 = (np.pi*self.w_min**2)/lamda_laser
         self.foco = foco
 
     def get_mascara_fase(self, X:np.ndarray, Y:np.ndarray) -> np.ndarray:
@@ -268,7 +268,7 @@ if __name__ == "__main__":
 
     # Crear una lente
     lamda_laser = 780e-9  # 780 nm
-    lente = Lente(w_min=0.5e-3, lamda_laser=lamda_laser, foco=0.1)
+    lente = Lente(w_min=50e-6, lamda_laser=lamda_laser, foco=0.24)
 
     # Obtener la máscara de fase
     mascara = lente.get_mascara_fase(X, Y)

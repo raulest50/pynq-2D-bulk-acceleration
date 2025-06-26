@@ -25,8 +25,8 @@ print_laser_info(femto)
 E0 = compute_E0(femto.P_avg, femto.f_rep, femto.tau, femto.w0)
 
 
-Nx = 128                   # Resolución en x
-Ny = 128                   # Resolución en y
+Nx = 64                   # Resolución en x
+Ny = 64                   # Resolución en y
 
 Lx = 2e-3
 Ly = 2e-3
@@ -109,16 +109,16 @@ else:
 from lentes.lente import Lente
 
 # Parámetros necesarios
-w_min = 500e-3  # Cintura mínima 300mm
-foco = 100e-3  # Distancia focal de la lente 150mm
+w_min = 50e-6  # Cintura mínima 300mm
+foco = 240e-3  # Distancia focal de la lente 150mm
 
 # Instanciar la lente
 mi_lente = Lente(w_min, femto.wavelength, foco)
 phase_mask = mi_lente.get_mascara_fase(X, Y)
-
+#Phi0 = Ex
 Phi0 = Ex * phase_mask
 
-plot_beam_profile(Phi0, x, y)
+#plot_beam_profile(Phi0, x, y)
 
 # T = z_scan(Phi0, sample, domain)
 # print(f" T: {T}")

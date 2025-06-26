@@ -10,8 +10,8 @@ colorama.init()
 class femto:
     # Parámetros del láser Carmel X-780
     wavelength = 780e-9  # m longitud onda
-    #w0 = 0.625e-3  # m beam waist
-    w0 = 1e-3  # m beam waist
+    w0 = 625e-6  # m beam waist 625um
+    #w0 = 1e-3  # m beam waist
     P_avg = 0.3  # W
     f_rep = 80e6  # Hz
     tau = 90e-15  # s
