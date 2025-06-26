@@ -6,117 +6,6 @@ from matplotlib.widgets import Slider
 from mpl_toolkits.mplot3d import Axes3D
 
 
-def gaussian_beam_profile_old(w0: float,
-                          E0: float,
-                          Nx: int,
-                          Ny: int,
-                          Lx: float = None,
-                          Ly: float = None) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Creates a 2D complex Gaussian beam profile suitable for initializing a BPM simulation.
-
-    Parameters:
-    ----------
-    wavelength : float
-        Wavelength of the laser in meters.
-    w0 : float
-        Beam waist (radius at z = 0) in meters.
-    E0 : float
-        Amplitude of the electric field.
-    Nx : int
-        Number of points in the x-direction (resolution).
-    Ny : int
-        Number of points in the y-direction (resolution).
-    Lx : float, optional
-        Physical size of the x-domain in meters. Defaults to 6 * w0.
-    Ly : float, optional
-        Physical size of the y-domain in meters. Defaults to 6 * w0.
-
-    Returns:
-    -------
-    Ex, x, y, X, Y : tuple
-        Complex electric field matrix (2D), 1D spatial coordinates x and y, and meshgrid X, Y.
-    """
-
-    # Set default domain sizes if not specified
-    if Lx is None:
-        Lx = 6 * w0
-    if Ly is None:
-        Ly = 6 * w0
-
-    # Define spatial grids
-    x = np.linspace(-Lx / 2, Lx / 2, Nx)
-    y = np.linspace(-Ly / 2, Ly / 2, Ny)
-    X, Y = np.meshgrid(x, y)
-
-    # Calculate radial distance squared from beam center
-    r2 = X**2 + Y**2
-
-    # Initial Gaussian beam profile (z = 0)
-    Ex = E0 * np.exp(-r2 / w0**2).astype(np.complex128)
-
-    return Ex, x, y, X, Y
-
-
-def gaussian_beam_profile_physical(
-    wavelength: float,
-    w0: float,
-    E0: float,
-    Nx: int,
-    Ny: int,
-    Lx: float = None,
-    Ly: float = None
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Genera U(x,y) de un haz gaussiano TEM00 usando parámetros físicos.
-
-    Parámetros:
-    - wavelength: longitud de onda λ (m)
-    - w0: cintura del haz (m)
-    - E0: amplitud pico del campo (V/m)
-    - Nx, Ny: puntos en x e y
-    - Lx, Ly: tamaño de dominio (m). Por defecto 6·w0.
-    """
-    if Lx is None: Lx = 6 * w0
-    if Ly is None: Ly = 6 * w0
-
-    x = np.linspace(-Lx/2, Lx/2, Nx)
-    y = np.linspace(-Ly/2, Ly/2, Ny)
-    X, Y = np.meshgrid(x, y)
-    r2 = X**2 + Y**2
-
-    # Perfil gaussiano: E0·exp(–r²/w0²) (modo TEM00) :contentReference[oaicite:8]{index=8} :contentReference[oaicite:9]{index=9}
-    Ex = E0 * np.exp(-r2 / w0**2).astype(np.complex128)
-    return Ex, x, y, X, Y
-
-
-def compute_E0(P_avg: float, f_rep: float, tau: float, w0: float) -> float:
-    """
-    Calcula la amplitud pico E0 del campo eléctrico (V/m) para un haz gaussiano.
-
-    Parámetros:
-    - P_avg: potencia promedio del láser (W)
-    - f_rep: tasa de repetición (Hz)
-    - tau: duración de pulso FWHM (s)
-    - w0: radio de cintura del haz (m)
-
-    Retorna:
-    - E0: amplitud pico (V/m)
-    """
-    # Energía y potencia pico según Sheik-Bahae et al. :contentReference[oaicite:5]{index=5}
-    E_pulse = P_avg / f_rep
-    P_peak = E_pulse / tau
-
-    # Intensidad pico en el foco de un haz gaussiano :contentReference[oaicite:6]{index=6}
-    I0 = 2 * P_peak / (np.pi * w0 ** 2)
-
-    # Relación I ↔ campo en vacío :contentReference[oaicite:7]{index=7}
-    c = 3e8  # m/s
-    eps0 = 8.854e-12  # F/m
-    E0 = np.sqrt(2 * I0 / (c * eps0))
-
-    return E0
-
 
 def plot_beam_profile(Ex, x, y):
     intensity = np.abs(Ex) ** 2
@@ -129,39 +18,6 @@ def plot_beam_profile(Ex, x, y):
     plt.axis('equal')
     plt.tight_layout()
     plt.show()
-
-
-def apply_lens(E_in: np.ndarray,
-               X: np.ndarray,
-               Y: np.ndarray,
-               k: float,
-               f: float,
-               strength: float = 1.0,
-               amp_gain: float = 1.0,
-               aperture: float | None = None) -> np.ndarray:
-    """
-    Simula una lente delgada con parámetros extra:
-
-    - f         : focal (m) donde quieres el foco
-    - strength  : factor sobre la curvatura de fase (f_eff = f/strength)
-    - amp_gain  : factor de escalado global de amplitud (Intensity → amp_gain^2)
-    - aperture  : diámetro de la lente (m). Si no es None, todo r > aperture/2 se bloquea.
-    """
-    # 1) fase parabólica con “fuerza” ajustable
-    phi = np.exp(-1j * k * strength / (2 * f) * (X ** 2 + Y ** 2))
-
-    # 2) aplicamos la lente
-    E_out = E_in * phi
-
-    # 3) ganancia de amplitud fija (para lograr cualquier aumento de intensidad)
-    E_out *= amp_gain
-
-    # 4) máscara de diafragma (opcional)
-    if aperture is not None:
-        mask = (X ** 2 + Y ** 2) <= (aperture / 2) ** 2
-        E_out *= mask
-
-    return E_out
 
 
 def plot_beam_propagation(phi_history, x, y, dz, cmap='inferno'):
@@ -280,15 +136,14 @@ def intensity_from_field(U: np.ndarray,
 
 def assess_intensity_zscan(
         Ex: np.ndarray,
-        sample: types.SimpleNamespace
+        sample
 ) -> float:
     """
     Evalúa si I_peak es suficiente para medir n2 por Z-scan.
 
     Parámetros:
-    - U: perfil de campo complejo
-    - material: clave en MATERIAL_PARAMS, e.g. "CS2"
-    - sample: diccionario con n2, etc.
+    - Ex: perfil de campo complejo
+    - sample: objeto de la clase Sample
 
     Returns:
     - I_peak: valor máximo de intensidad en W/m²

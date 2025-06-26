@@ -8,7 +8,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 # Import from the helpers package
-from helpers import u_gaussian
+from archivo.helpers import u_gaussian
 
 # Parameters
 L = 10.0          # Domain length

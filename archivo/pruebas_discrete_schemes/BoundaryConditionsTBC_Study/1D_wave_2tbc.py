@@ -8,7 +8,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 # Import from the helpers package
-from helpers import create_tridiagonal_matrix
+from archivo.helpers import create_tridiagonal_matrix
 
 # -------------------------
 # Parámetros del dominio (normalizados)
@@ -56,13 +56,20 @@ ax.grid(True)
 # -------------------------
 # Paso de Crank–Nicolson (primer orden en z)
 def paso_CN(E_prev):
-    ratio = E_prev[-1] / E_prev[-2]
-    ghost = E_prev[-1] * ratio
+    ratio_rg = E_prev[-1] / E_prev[-2]
+    ratio_lf = E_prev[0] / E_prev[1]
+    # ghost_rg = E_prev[-1] * ratio_rg
+    # ghost_lf = E_prev[0] * ratio_lf
+    # B_mod = B.copy()
+    B[0, 0] = -2*g +1 + g*ratio_lf # frontera absorbente izquierda
+    B[-1, -1] = -2*g +1 + g * ratio_rg # frontera absorbente derecha
     b = B.dot(E_prev)
-    b[-1] += ghost*g
-    A_mod = A.copy()
-    A_mod[-1, -1] += g * ratio
-    E_next = np.linalg.solve(A_mod, b)
+    # b[-1] += ghost_rg*g
+    # b[0] += ghost_lf*g
+    #A_mod = A.copy()
+    A[0, 0] = -2*g -1 + g * ratio_lf # frontera absorbente izquierda
+    A[-1, -1] = -2*g -1 + g * ratio_rg # frontera absorbente derecha
+    E_next = np.linalg.solve(A, b)
     return E_next
 
 # -------------------------

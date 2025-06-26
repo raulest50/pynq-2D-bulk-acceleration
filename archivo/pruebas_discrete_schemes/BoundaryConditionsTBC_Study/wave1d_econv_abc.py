@@ -8,7 +8,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 # Import from the helpers package
-from helpers import u_gaussian, ut_gaussian, create_tridiagonal_matrix
+from archivo.helpers import u_gaussian, ut_gaussian, create_tridiagonal_matrix
 
 # ——— Domain & parameters ———
 c     = 4.0             # wave speed
