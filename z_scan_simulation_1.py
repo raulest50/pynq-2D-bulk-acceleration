@@ -1,3 +1,4 @@
+import lentes.lente_ideal
 from zscan_custom.info_methods import plot_beam_profile, plot_beam_propagation, \
     assess_intensity_zscan, compute_transmitance_physical
 
@@ -25,8 +26,8 @@ print_laser_info(femto)
 E0 = compute_E0(femto.P_avg, femto.f_rep, femto.tau, femto.w0)
 
 
-Nx = 64                   # Resolución en x
-Ny = 64                   # Resolución en y
+Nx = 256                   # Resolución en x
+Ny = 256                   # Resolución en y
 
 Lx = 2e-3
 Ly = 2e-3
@@ -43,7 +44,7 @@ alpha_air = materials.aire.alpha
 k_air = 2 * 3.141592653589793 / femto.wavelength * n_air
 
 # Parametros simulacion z-scan
-Nz = 600
+Nz = 1200 # Numero de pasos en z
 Lz = 0.6 # 60 centimetros
 z = np.linspace(0, Lz, Nz)
 
@@ -113,9 +114,13 @@ w_min = 50e-6  # Cintura mínima 300mm
 foco = 240e-3  # Distancia focal de la lente 150mm
 
 # Instanciar la lente
-mi_lente = Lente(w_min, femto.wavelength, foco)
-phase_mask = mi_lente.get_mascara_fase(X, Y)
+#mi_lente = Lente(w_min, femto.wavelength, foco)
+#phase_mask = mi_lente.get_mascara_fase(X, Y)
+
 #Phi0 = Ex
+
+phase_mask = lentes.lente_ideal.get_mascara_fase(f=foco, λ=femto.wavelength, n=1.4, D=0, X=X, Y=Y)
+
 Phi0 = Ex * phase_mask
 
 #plot_beam_profile(Phi0, x, y)
