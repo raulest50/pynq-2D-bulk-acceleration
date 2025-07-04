@@ -4,7 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
 
-def campo_tem00(X, Y, w0, I0):
+def campo_tem00(X, Y, w0, I0, fase_inicial=0.0):
     """
     Genera un campo TEM00 gaussiano complejo E(x,y) listo para usar en BPM.
 
@@ -19,7 +19,8 @@ def campo_tem00(X, Y, w0, I0):
     """
     R2 = X**2 + Y**2
     Ex = np.sqrt(I0) * np.exp(-R2 / w0**2)
-    return Ex
+    fase = np.exp(-1j * fase_inicial)
+    return Ex * fase
 
 
 class fuente_microscopia_1:
@@ -31,12 +32,12 @@ class fuente_microscopia_1:
 
 if __name__ == "__main__":
     # Parámetros del haz
-    w0 = 3e-6  # Radio del haz en metros (3 µm)
-    I0 = 1e11   # Intensidad pico en W/m²
+    w0 = fuente_microscopia_1.w0  # Radio del haz en metros (3 µm)
+    I0 = fuente_microscopia_1.I_peak   # Intensidad pico en W/m²
 
     # Crear malla de coordenadas
-    L = 15e-6  # Tamaño del dominio (15 µm)
-    N = 200     # Número de puntos en cada dimensión
+    L = 45e-6  # Tamaño del dominio (15 µm)
+    N = 128     # Número de puntos en cada dimensión
     x = np.linspace(-L/2, L/2, N)
     y = np.linspace(-L/2, L/2, N)
     X, Y = np.meshgrid(x, y)

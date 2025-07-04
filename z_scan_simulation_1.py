@@ -1,11 +1,12 @@
-from zscan.zscan_propagators import plot_beam_propagation, \
+from zscan.zscan_propagators.info_methods import plot_beam_propagation, \
     assess_intensity_zscan, compute_transmitance_physical
 
-from zscan.lasers import gaussian_beam_profile_physical, femto, print_laser_info, compute_E0
+from zscan.lasers.lasers import gaussian_beam_profile_physical, femto, print_laser_info, compute_E0
 from zscan import materiales as materials
 from zscan.materiales.domain import Domain
-from zscan.materiales import Sample
+from zscan.materiales.sample import Sample
 from zscan.zscan_propagators.propagations import full_propagation_without_sample
+from zscan.lentes.lente_ideal import get_mascara_fase
 
 import time
 import colorama
@@ -114,7 +115,7 @@ foco = 240e-3  # Distancia focal de la lente 150mm
 
 #Phi0 = Ex
 
-phase_mask = zscan.lentes.lente_ideal.get_mascara_fase(f=foco, λ=femto.wavelength, n=1.4, D=0, X=X, Y=Y)
+phase_mask = get_mascara_fase(f=foco, λ=femto.wavelength, n=1.4, D=0, X=X, Y=Y)
 
 Phi0 = Ex * phase_mask
 
