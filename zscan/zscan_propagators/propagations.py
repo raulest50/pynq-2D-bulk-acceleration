@@ -1,6 +1,6 @@
 import numpy as np
 
-from zscan_custom.operadores_solvers import single_bpm_step_only_linear_medium, \
+from zscan.zscan_propagators.operadores_solvers import single_bpm_step_only_linear_medium, \
     single_bpm_step_within_sample, single_bpm_step_only_linear_medium_wa
 
 

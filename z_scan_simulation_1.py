@@ -1,14 +1,11 @@
-import lentes.lente_ideal
-from zscan_custom.info_methods import plot_beam_profile, plot_beam_propagation, \
+from zscan.zscan_propagators import plot_beam_propagation, \
     assess_intensity_zscan, compute_transmitance_physical
 
-from lasers.lasers import gaussian_beam_profile_physical, femto, print_laser_info, compute_E0
-import materiales.materials as materials
-from materiales.domain import Domain
-from materiales.sample import Sample
-from zscan_custom.propagations import full_propagation_without_sample
-from lentes.lente import Lente
-
+from zscan.lasers import gaussian_beam_profile_physical, femto, print_laser_info, compute_E0
+from zscan import materiales as materials
+from zscan.materiales.domain import Domain
+from zscan.materiales import Sample
+from zscan.zscan_propagators.propagations import full_propagation_without_sample
 
 import time
 import colorama
@@ -107,8 +104,6 @@ else:
     print(f"\n{Fore.CYAN}{Style.BRIGHT}💡 EVALUACIÓN DE INTENSIDAD {Style.RESET_ALL}")
     print(f"{Fore.YELLOW}I_peak: {Fore.WHITE}{I_peak:.2e} W/m² {Fore.RED}→ intensidad insuficiente; considerar enfoque más fuerte o pulso más corto{Style.RESET_ALL}")
 
-from lentes.lente import Lente
-
 # Parámetros necesarios
 w_min = 50e-6  # Cintura mínima 300mm
 foco = 240e-3  # Distancia focal de la lente 150mm
@@ -119,7 +114,7 @@ foco = 240e-3  # Distancia focal de la lente 150mm
 
 #Phi0 = Ex
 
-phase_mask = lentes.lente_ideal.get_mascara_fase(f=foco, λ=femto.wavelength, n=1.4, D=0, X=X, Y=Y)
+phase_mask = zscan.lentes.lente_ideal.get_mascara_fase(f=foco, λ=femto.wavelength, n=1.4, D=0, X=X, Y=Y)
 
 Phi0 = Ex * phase_mask
 

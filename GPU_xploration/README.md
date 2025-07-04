@@ -26,12 +26,12 @@ Instead of importing from the original modules, import from the GPU-accelerated 
 
 ```python
 # Original imports
-from zscan_custom.operadores_solvers import single_bpm_step_only_linear_medium
-from zscan_custom.propagations import full_propagation_without_sample
+from zscan.zscan_propagators import single_bpm_step_only_linear_medium
+from zscan.zscan_propagators.propagations import full_propagation_without_sample
 
 # Replace with GPU-accelerated imports
-from zscan_custom.operadores_solvers_gpu import single_bpm_step_only_linear_medium
-from zscan_custom.propagations_gpu import full_propagation_without_sample
+from zscan.zscan_propagators import single_bpm_step_only_linear_medium
+from zscan.zscan_propagators import full_propagation_without_sample
 ```
 
 ### 2. Use the functions as you would with the CPU versions
@@ -62,8 +62,8 @@ To compare CPU vs GPU performance, you can run the same simulation with both imp
 
 ```python
 import time
-from zscan_custom.propagations import full_propagation_without_sample as cpu_full_propagation_without_sample
-from zscan_custom.propagations_gpu import full_propagation_without_sample as gpu_full_propagation_without_sample
+from zscan.zscan_propagators.propagations import full_propagation_without_sample as cpu_full_propagation_without_sample
+from zscan.zscan_propagators import full_propagation_without_sample as gpu_full_propagation_without_sample
 
 # CPU implementation
 start_time = time.time()

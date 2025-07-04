@@ -1,5 +1,4 @@
 import numpy as np
-import pycuda.autoinit
 import pycuda.driver as cuda
 from pycuda.compiler import SourceModule
 import pycuda.gpuarray as gpuarray
@@ -15,7 +14,7 @@ except:
     warnings.warn("CUDA device not found. Falling back to CPU implementation.")
 
 # Import original CPU implementations as fallback
-from zscan_custom.operadores_solvers import (
+from zscan.zscan_propagators.operadores_solvers import (
     custom_thomas_solver as cpu_custom_thomas_solver,
     compute_b_vector as cpu_compute_b_vector,
     adi_x as cpu_adi_x,

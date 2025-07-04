@@ -1,5 +1,4 @@
 import numpy as np
-import pycuda.autoinit
 import pycuda.driver as cuda
 import pycuda.gpuarray as gpuarray
 import warnings
@@ -13,14 +12,14 @@ except:
     warnings.warn("CUDA device not found. Falling back to CPU implementation.")
 
 # Import GPU-accelerated operators and solvers
-from zscan_custom.operadores_solvers_gpu import (
+from zscan.zscan_propagators.operadores_solvers_gpu import (
     single_bpm_step_only_linear_medium,
     single_bpm_step_within_sample,
     single_bpm_step_only_linear_medium_wa
 )
 
 # Import original CPU implementations as fallback
-from zscan_custom.propagations import (
+from zscan.zscan_propagators.propagations import (
     z_scan as cpu_z_scan,
     full_propagation_without_sample as cpu_full_propagation_without_sample,
     apply_lens_truncated as cpu_apply_lens_truncated,

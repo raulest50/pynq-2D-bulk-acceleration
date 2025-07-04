@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from zscan_custom.operadores_solvers import single_bpm_step_only_linear_medium
+from zscan.zscan_propagators.operadores_solvers import single_bpm_step_only_linear_medium
 
 
 class Lente:

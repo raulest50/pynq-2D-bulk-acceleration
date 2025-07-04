@@ -15,17 +15,16 @@ from colorama import Fore, Style
 colorama.init()
 
 # Import from GPU-accelerated modules instead of the original ones
-from zscan_custom.propagations_gpu import full_propagation_without_sample
-from zscan_custom.info_methods import plot_beam_profile, plot_beam_propagation, compute_transmitance_physical
+from zscan.zscan_propagators import full_propagation_without_sample
+from zscan.zscan_propagators import plot_beam_propagation, compute_transmitance_physical
 
 # The rest of the imports remain the same
-from lasers.lasers import gaussian_beam_profile_physical, femto, print_laser_info, compute_E0
-import materiales.materials as materials
-from materiales.domain import Domain
-from materiales.sample import Sample
-import lentes.lente_ideal
+from zscan.lasers import gaussian_beam_profile_physical, femto, print_laser_info, compute_E0
+from zscan import materiales as materials
+from zscan.materiales.domain import Domain
+from zscan.materiales import Sample
 
-# Print laser information
+# Print laseres information
 print_laser_info(femto)
 
 # Calculate E0 to use in the rest of the code
@@ -100,7 +99,7 @@ sample.print_stops_info()
 foco = 240e-3  # Focal length of the lens (240mm)
 
 # Create phase mask for the lens
-phase_mask = lentes.lente_ideal.get_mascara_fase(f=foco, λ=femto.wavelength, n=1.4, D=0, X=X, Y=Y)
+phase_mask = zscan.lentes.lente_ideal.get_mascara_fase(f=foco, λ=femto.wavelength, n=1.4, D=0, X=X, Y=Y)
 
 # Apply the lens to the beam
 Phi0 = Ex * phase_mask
@@ -128,7 +127,7 @@ plot_beam_propagation(phi_history, x, y, dz)
 """
 Note: To compare CPU vs GPU performance, you can run the same simulation with the CPU implementation:
 
-from zscan_custom.propagations import full_propagation_without_sample as cpu_full_propagation_without_sample
+from zscan_propagators.propagations import full_propagation_without_sample as cpu_full_propagation_without_sample
 
 # Run the simulation with CPU implementation
 print(f"\n{Fore.CYAN}{Style.BRIGHT}🔄 Running simulation with CPU implementation...{Style.RESET_ALL}")
