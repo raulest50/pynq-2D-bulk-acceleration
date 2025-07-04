@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.ndimage import gaussian_filter
 
 
 ## Operador Dispersion
@@ -165,4 +166,52 @@ def adi_y(phi, Nx, eps, k, dz, dy):
 def half_nonlinear(phi, k_sample, n2_sample, dz):
    phase = np.exp( 1j * k_sample * n2_sample * dz/2 *np.abs(phi)**2 )
    return phase * phi
+
+
+## Operadores de absorcion
+
+# absorcion lineal
+def half_linear_absorption(phi, alpha, dz):
+   return np.exp( -alpha * dz /4 ) * phi
+
+# absorcion de 2 fotones
+def half_2photon_absorption(phi, beta, dz):
+   return np.exp( -beta * dz /4 * np.abs(phi)**2 ) * phi**2
+
+
+## Mascara de fase aleatoria
+
+def aplicar_mascara_fase_aleatoria(phi, X, Y, desviacion_fase=0.3, correlacion_um=2.0, semilla=None):
+    """
+    Genera una máscara de fase aleatoria suave en radianes, usando X e Y como mallas espaciales.
+
+    Parámetros:
+        X, Y (ndarray): mallas 2D generadas por np.meshgrid, en metros o micras.
+        desviacion_fase (float): desviación estándar de la fase (en radianes).
+        correlacion_um (float): longitud de correlación espacial en micras (µm).
+        semilla (int, optional): semilla para reproducibilidad.
+
+    Retorna:
+        ndarray: matriz 2D con fase aleatoria suave en radianes.
+    """
+    if semilla is not None:
+        np.random.seed(semilla)
+
+    shape = X.shape
+
+    # Calcular dx y dy a partir de las mallas
+    dx = np.abs(X[0, 1] - X[0, 0]) * 1e6  # micras
+    dy = np.abs(Y[1, 0] - Y[0, 0]) * 1e6  # micras
+
+    # Longitud de correlación en número de píxeles
+    sigma_x = correlacion_um / dx
+    sigma_y = correlacion_um / dy
+
+    # Generar ruido gaussiano blanco
+    ruido = np.random.normal(loc=0.0, scale=desviacion_fase, size=shape)
+
+    # Suavizar con filtro gaussiano anisotrópico
+    fase = gaussian_filter(ruido, sigma=(sigma_y, sigma_x), mode='reflect')
+
+    return phi*fase
 
