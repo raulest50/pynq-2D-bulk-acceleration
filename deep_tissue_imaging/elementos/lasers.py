@@ -26,7 +26,7 @@ def campo_tem00(X, Y, w0, I0, fase_inicial=0.0):
 class fuente_microscopia_1:
     wavelength = 800e-9  # m longitud onda
     w0 = 3e-6  # m beam waist 3um
-    I_peak = 1e11  # W/m**2
+    I_peak = 1e10  # W/m**2
     NA = 0.1  # NA de la lente
 
 

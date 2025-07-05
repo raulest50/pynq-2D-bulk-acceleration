@@ -6,5 +6,3 @@ class cerebro_emb_pez_cebra:
     alpha = 0.3 # mm*-1
     beta = 1e-11 # m/W
     n2 = 3e-20 # m²/W
-
-

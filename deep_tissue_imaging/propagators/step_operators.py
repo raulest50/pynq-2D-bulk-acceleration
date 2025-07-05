@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.ndimage import gaussian_filter
 
+from deep_tissue_imaging.elementos.plotting import plot_field_intensity_history, plot_field_intensity
+
 
 ## Operador Dispersion
 
@@ -176,23 +178,24 @@ def half_linear_absorption(phi, alpha, dz):
 
 # absorcion de 2 fotones
 def half_2photon_absorption(phi, beta, dz):
-   return np.exp( -beta * dz /4 * np.abs(phi)**2 ) * phi**2
+   return np.exp( -beta * dz /4 * np.abs(phi)**2 ) * phi
 
 
 ## Mascara de fase aleatoria
 
 def aplicar_mascara_fase_aleatoria(phi, X, Y, desviacion_fase=0.3, correlacion_um=2.0, semilla=None):
     """
-    Genera una máscara de fase aleatoria suave en radianes, usando X e Y como mallas espaciales.
+    Aplica una máscara de fase aleatoria suave al campo complejo phi.
 
     Parámetros:
-        X, Y (ndarray): mallas 2D generadas por np.meshgrid, en metros o micras.
-        desviacion_fase (float): desviación estándar de la fase (en radianes).
-        correlacion_um (float): longitud de correlación espacial en micras (µm).
-        semilla (int, optional): semilla para reproducibilidad.
+        phi (ndarray): campo complejo original (E o phi).
+        X, Y (ndarray): mallas espaciales 2D (en metros o micras).
+        desviacion_fase (float): desviación estándar de la fase en radianes.
+        correlacion_um (float): longitud de correlación espacial en micras.
+        semilla (int, opcional): semilla para reproducibilidad.
 
     Retorna:
-        ndarray: matriz 2D con fase aleatoria suave en radianes.
+        ndarray: campo complejo phi con fase aleatoria aplicada.
     """
     if semilla is not None:
         np.random.seed(semilla)
@@ -207,11 +210,16 @@ def aplicar_mascara_fase_aleatoria(phi, X, Y, desviacion_fase=0.3, correlacion_u
     sigma_x = correlacion_um / dx
     sigma_y = correlacion_um / dy
 
-    # Generar ruido gaussiano blanco
+    # Ruido gaussiano con desviación deseada
     ruido = np.random.normal(loc=0.0, scale=desviacion_fase, size=shape)
 
-    # Suavizar con filtro gaussiano anisotrópico
-    fase = gaussian_filter(ruido, sigma=(sigma_y, sigma_x), mode='reflect')
+    # Suavizado para imitar fluctuación estructural
+    theta = gaussian_filter(ruido, sigma=(sigma_y, sigma_x), mode='reflect')
+    mf = np.exp(1j * theta)
+    plot_field_intensity(np.real(mf), X, Y)
 
-    return phi*fase
+    # Aplicar la fase aleatoria como exponente complejo
+    phi_modulado = phi * mf
+
+    return phi_modulado
 
