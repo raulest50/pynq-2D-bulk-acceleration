@@ -18,16 +18,16 @@ def campo_tem00(X, Y, w0, I0, fase_inicial=0.0):
         ndarray complejo: campo eléctrico complejo E(x,y)
     """
     R2 = X**2 + Y**2
-    Ex = np.sqrt(I0) * np.exp(-R2 / w0**2)
-    fase = np.exp(-1j * fase_inicial)
-    return Ex * fase
+    Ex = np.sqrt(np.float32(I0)) * np.exp(np.float32(-R2 / w0**2))
+    fase = np.exp(np.complex64(-1j * fase_inicial))
+    return np.complex64(Ex * fase)
 
 
 class fuente_microscopia_1:
-    wavelength = 800e-9  # m longitud onda
-    w0 = 3e-6  # m beam waist 3um
-    I_peak = 1e10  # W/m**2
-    NA = 0.1  # NA de la lente
+    wavelength = np.float32(800e-9)  # m longitud onda
+    w0 = np.float32(3e-6)  # m beam waist 3um
+    I_peak = np.float32(1e10)  # W/m**2
+    NA = np.float32(0.1)  # NA de la lente
 
 
 if __name__ == "__main__":

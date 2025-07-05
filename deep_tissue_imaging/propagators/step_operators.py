@@ -100,30 +100,30 @@ def compute_b_vector(dp, dp1, dp2, do, x0):
 
 
 def adi_x(phi, Ny, eps, k, dz, dx):
-    ung = 1j * dz / (4 * k * dx**2)
-    phi_inter = np.zeros_like(phi, dtype=complex)
+    ung = np.complex64(1j * dz / (4 * k * dx**2))
+    phi_inter = np.zeros_like(phi, dtype=np.complex64)
     for j in range(Ny):
 
         if abs(phi[1, j]) < eps:
-            ratio_x0 = 1.0
+            ratio_x0 = np.float32(1.0)
         else:
             ratio_x0 = phi[0, j] / phi[1, j]
 
         if abs(phi[-2, j]) < eps:
-            ratio_xn = 1.0
+            ratio_xn = np.float32(1.0)
         else:
             ratio_xn = phi[-1, j] / phi[-2, j]
 
-        dp1_B = -2 * ung + 1 + ung * ratio_x0
-        dp2_B = -2 * ung + 1 + ung * ratio_xn
-        dp_B = -2 * ung + 1
+        dp1_B = -2 * ung + np.float32(1.0) + ung * ratio_x0
+        dp2_B = -2 * ung + np.float32(1.0) + ung * ratio_xn
+        dp_B = -2 * ung + np.float32(1.0)
         do_B = ung
 
         b = compute_b_vector(dp_B, dp1_B, dp2_B, do_B, phi[:, j])
 
-        dp1_A = 2 * ung + 1 - ung * ratio_x0
-        dp2_A = 2 * ung + 1 - ung * ratio_xn
-        dp_A = 2 * ung + 1
+        dp1_A = 2 * ung + np.float32(1.0) - ung * ratio_x0
+        dp2_A = 2 * ung + np.float32(1.0) - ung * ratio_xn
+        dp_A = 2 * ung + np.float32(1.0)
         do_A = -ung
 
         phi_inter[:, j] = custom_thomas_solver(dp_A, dp1_A, dp2_A, do_A, b)
@@ -132,30 +132,30 @@ def adi_x(phi, Ny, eps, k, dz, dx):
 
 
 def adi_y(phi, Nx, eps, k, dz, dy):
-    ung = 1j * dz / (4 * k * dy**2)
-    phi_inter = np.zeros_like(phi, dtype=complex)
+    ung = np.complex64(1j * dz / (4 * k * dy**2))
+    phi_inter = np.zeros_like(phi, dtype=np.complex64)
     for i in range(Nx):
 
         if abs(phi[i, 1]) < eps:
-            ratio_y0 = 1.0
+            ratio_y0 = np.float32(1.0)
         else:
             ratio_y0 = phi[i, 0] / phi[i, 1]
 
         if abs(phi[i, -2]) < eps:
-            ratio_yn = 1.0
+            ratio_yn = np.float32(1.0)
         else:
             ratio_yn = phi[i, -1] / phi[i, -2]
 
-        dp1_B = -2 * ung + 1 + ung * ratio_y0
-        dp2_B = -2 * ung + 1 + ung * ratio_yn
-        dp_B = -2 * ung + 1
+        dp1_B = -2 * ung + np.float32(1.0) + ung * ratio_y0
+        dp2_B = -2 * ung + np.float32(1.0) + ung * ratio_yn
+        dp_B = -2 * ung + np.float32(1.0)
         do_B = ung
 
         b = compute_b_vector(dp_B, dp1_B, dp2_B, do_B, phi[i, :])
 
-        dp1_A = 2 * ung + 1 - ung * ratio_y0
-        dp2_A = 2 * ung + 1 - ung * ratio_yn
-        dp_A = 2 * ung + 1
+        dp1_A = 2 * ung + np.float32(1.0) - ung * ratio_y0
+        dp2_A = 2 * ung + np.float32(1.0) - ung * ratio_yn
+        dp_A = 2 * ung + np.float32(1.0)
         do_A = -ung
 
         phi_inter[i, :] = custom_thomas_solver(dp_A, dp1_A, dp2_A, do_A, b)
@@ -166,7 +166,7 @@ def adi_y(phi, Nx, eps, k, dz, dy):
 ## Operador N - Kerr
 
 def half_nonlinear(phi, k_sample, n2_sample, dz):
-   phase = np.exp( 1j * k_sample * n2_sample * dz/2 *np.abs(phi)**2 )
+   phase = np.exp(np.complex64(1j * k_sample * n2_sample * dz/2 * np.abs(phi)**2))
    return phase * phi
 
 
@@ -174,11 +174,11 @@ def half_nonlinear(phi, k_sample, n2_sample, dz):
 
 # absorcion lineal
 def half_linear_absorption(phi, alpha, dz):
-   return np.exp( -alpha * dz /4 ) * phi
+   return np.exp(np.float32(-alpha * dz/4)) * phi
 
 # absorcion de 2 fotones
 def half_2photon_absorption(phi, beta, dz):
-   return np.exp( -beta * dz /4 * np.abs(phi)**2 ) * phi
+   return np.exp(np.float32(-beta * dz/4 * np.abs(phi)**2)) * phi
 
 
 ## Mascara de fase aleatoria
@@ -203,23 +203,22 @@ def aplicar_mascara_fase_aleatoria(phi, X, Y, desviacion_fase=0.3, correlacion_u
     shape = X.shape
 
     # Calcular dx y dy a partir de las mallas
-    dx = np.abs(X[0, 1] - X[0, 0]) * 1e6  # micras
-    dy = np.abs(Y[1, 0] - Y[0, 0]) * 1e6  # micras
+    dx = np.float32(np.abs(X[0, 1] - X[0, 0]) * 1e6)  # micras
+    dy = np.float32(np.abs(Y[1, 0] - Y[0, 0]) * 1e6)  # micras
 
     # Longitud de correlación en número de píxeles
-    sigma_x = correlacion_um / dx
-    sigma_y = correlacion_um / dy
+    sigma_x = np.float32(correlacion_um / dx)
+    sigma_y = np.float32(correlacion_um / dy)
 
     # Ruido gaussiano con desviación deseada
-    ruido = np.random.normal(loc=0.0, scale=desviacion_fase, size=shape)
+    ruido = np.random.normal(loc=0.0, scale=desviacion_fase, size=shape).astype(np.float32)
 
     # Suavizado para imitar fluctuación estructural
     theta = gaussian_filter(ruido, sigma=(sigma_y, sigma_x), mode='reflect')
-    mf = np.exp(1j * theta)
-    plot_field_intensity(np.real(mf), X, Y)
+    mf = np.exp(np.complex64(1j * theta))
+    # plot_field_intensity(np.real(mf), X, Y)
 
     # Aplicar la fase aleatoria como exponente complejo
     phi_modulado = phi * mf
 
     return phi_modulado
-

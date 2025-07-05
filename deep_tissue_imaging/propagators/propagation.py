@@ -15,7 +15,7 @@ def full_step_within_tissue(phi, tejido, d):
 
 def full_propagation_within_tissue(phi, tejido, d):
     spm = int(tejido.l_s/d.dz)
-    phi_history = np.zeros((d.Nz + 1, *phi.shape), dtype=complex)
+    phi_history = np.zeros((d.Nz + 1, *phi.shape), dtype=np.complex64)
     phi_history[0] = phi
     for k in range(0, d.Nz):
         phi = full_step_within_tissue(phi, tejido, d)

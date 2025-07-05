@@ -9,26 +9,26 @@ import deep_tissue_imaging.elementos.domain as Domain
 
 # Parametros de dominio
 
-Lz = 241e-6 # 200um
-Nz = 241
-dz = Lz / Nz # 1um
+Lz = np.float32(361e-6) # 200um
+Nz = 361
+dz = np.float32(Lz / Nz) # 1um
 
-Lx, Ly = 45e-6, 45e-6 # 45um x 45um
-Nx, Ny = 128, 128
-dx = Lx / Nx # 0.35um
-dy = Ly / Ny # 0.35um
+Lx, Ly = np.float32(45e-6), np.float32(45e-6) # 45um x 45um
+Nx, Ny = 256, 256
+dx = np.float32(Lx / Nx) # 0.35um
+dy = np.float32(Ly / Ny) # 0.35um
 
-x = np.linspace(-Lx/2, Lx/2, Nx)
-y = np.linspace(-Ly/2, Ly/2, Ny)
+x = np.linspace(-Lx/2, Lx/2, Nx, dtype=np.float32)
+y = np.linspace(-Ly/2, Ly/2, Ny, dtype=np.float32)
 X, Y = np.meshgrid(x, y)
 
-k0 = 2*np.pi / laser.wavelength
-k = k0 * tejido.n_0
-sigma_phi = k * tejido.Dn * tejido.l_s
+k0 = np.float32(2*np.pi / laser.wavelength)
+k = np.float32(k0 * tejido.n_0)
+sigma_phi = np.float32(k * tejido.Dn * tejido.l_s)
 #sigma_x = 1600e-6 # 1 - 5 um
-sigma_x = 1600000e-6*2
+sigma_x = np.float32(1600000e-6*2)
 
-domain = Domain.Domain(X, Y, Nx, Ny, Nz, dx, dy, dz, 1e-12, k0, k, sigma_phi, sigma_x)
+domain = Domain.Domain(X, Y, Nx, Ny, Nz, dx, dy, dz, np.float32(1e-12), k0, k, sigma_phi, sigma_x)
 
 phi0 = campo_tem00(X, Y, laser.w0, laser.I_peak)
 # plot_field_intensity(phi0, X, Y)
