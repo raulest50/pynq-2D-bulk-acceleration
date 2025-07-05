@@ -8,15 +8,15 @@ from deep_tissue_imaging.elementos.tejidos import cerebro_emb_pez_cebra as tejid
 import deep_tissue_imaging.elementos.domain as Domain
 from deep_tissue_imaging.elementos.lasers import fuente_microscopia_1 as laser
 
-def graficar_mascara_fase_aleatoria(X, Y, desviacion_fase=0.3, correlacion_um=2.0, semilla=None):
+def graficar_mascara_fase_aleatoria(X, Y, desviacion_fase=0.3, correlacion_m=5e-6, semilla=None):
     """
     Aplica una máscara de fase aleatoria suave al campo complejo phi.
 
     Parámetros:
         phi (ndarray): campo complejo original (E o phi).
-        X, Y (ndarray): mallas espaciales 2D (en metros o micras).
+        X, Y (ndarray): mallas espaciales 2D (en metros).
         desviacion_fase (float): desviación estándar de la fase en radianes.
-        correlacion_um (float): longitud de correlación espacial en micras.
+        correlacion_m (float): longitud de correlación espacial en metros.
         semilla (int, opcional): semilla para reproducibilidad.
 
     Retorna:
@@ -27,13 +27,13 @@ def graficar_mascara_fase_aleatoria(X, Y, desviacion_fase=0.3, correlacion_um=2.
 
     shape = X.shape
 
-    # Calcular dx y dy a partir de las mallas
-    dx = np.abs(X[0, 1] - X[0, 0]) * 1e6  # micras
-    dy = np.abs(Y[1, 0] - Y[0, 0]) * 1e6  # micras
+    # Calcular dx y dy a partir de las mallas (en metros)
+    dx = np.abs(X[0, 1] - X[0, 0])  # metros
+    dy = np.abs(Y[1, 0] - Y[0, 0])  # metros
 
     # Longitud de correlación en número de píxeles
-    sigma_x = correlacion_um / dx
-    sigma_y = correlacion_um / dy
+    sigma_x = correlacion_m / dx
+    sigma_y = correlacion_m / dy
 
     # Ruido gaussiano con desviación deseada
     ruido = np.random.normal(loc=0.0, scale=desviacion_fase, size=shape)
@@ -110,10 +110,9 @@ X, Y = np.meshgrid(x, y)
 k0 = 2*np.pi / laser.wavelength
 k = k0 * tejido.n_0
 sigma_phi = k * tejido.Dn * tejido.l_s
-sigma_x = 1600000e-6*2 # 1 - 5 um
+# Typical value for brain tissue (5 μm)
+sigma_x = 5e-6
 
 domain = Domain.Domain(X, Y, Nx, Ny, Nz, dx, dy, dz, 1e-12, k0, k, sigma_phi, sigma_x)
 
 graficar_mascara_fase_aleatoria(X, Y, domain.sigma_phi*10, domain.sigma_x)
-
-

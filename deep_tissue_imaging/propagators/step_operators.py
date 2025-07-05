@@ -183,15 +183,15 @@ def half_2photon_absorption(phi, beta, dz):
 
 ## Mascara de fase aleatoria
 
-def aplicar_mascara_fase_aleatoria(phi, X, Y, desviacion_fase=0.3, correlacion_um=2.0, semilla=None):
+def aplicar_mascara_fase_aleatoria(phi, X, Y, desviacion_fase=0.3, correlacion_m=5e-6, semilla=None):
     """
     Aplica una máscara de fase aleatoria suave al campo complejo phi.
 
     Parámetros:
         phi (ndarray): campo complejo original (E o phi).
-        X, Y (ndarray): mallas espaciales 2D (en metros o micras).
+        X, Y (ndarray): mallas espaciales 2D (en metros).
         desviacion_fase (float): desviación estándar de la fase en radianes.
-        correlacion_um (float): longitud de correlación espacial en micras.
+        correlacion_m (float): longitud de correlación espacial en metros.
         semilla (int, opcional): semilla para reproducibilidad.
 
     Retorna:
@@ -202,13 +202,13 @@ def aplicar_mascara_fase_aleatoria(phi, X, Y, desviacion_fase=0.3, correlacion_u
 
     shape = X.shape
 
-    # Calcular dx y dy a partir de las mallas
-    dx = np.float32(np.abs(X[0, 1] - X[0, 0]) * 1e6)  # micras
-    dy = np.float32(np.abs(Y[1, 0] - Y[0, 0]) * 1e6)  # micras
+    # Calcular dx y dy a partir de las mallas (en metros)
+    dx = np.float32(np.abs(X[0, 1] - X[0, 0]))  # metros
+    dy = np.float32(np.abs(Y[1, 0] - Y[0, 0]))  # metros
 
     # Longitud de correlación en número de píxeles
-    sigma_x = np.float32(correlacion_um / dx)
-    sigma_y = np.float32(correlacion_um / dy)
+    sigma_x = np.float32(correlacion_m / dx)
+    sigma_y = np.float32(correlacion_m / dy)
 
     # Ruido gaussiano con desviación deseada
     ruido = np.random.normal(loc=0.0, scale=desviacion_fase, size=shape).astype(np.float32)

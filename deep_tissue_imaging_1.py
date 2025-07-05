@@ -25,8 +25,8 @@ X, Y = np.meshgrid(x, y)
 k0 = np.float32(2*np.pi / laser.wavelength)
 k = np.float32(k0 * tejido.n_0)
 sigma_phi = np.float32(k * tejido.Dn * tejido.l_s)
-#sigma_x = 1600e-6 # 1 - 5 um
-sigma_x = np.float32(1600000e-6*2)
+# Typical value for brain tissue (5 μm)
+sigma_x = np.float32(5e-6)
 
 domain = Domain.Domain(X, Y, Nx, Ny, Nz, dx, dy, dz, np.float32(1e-12), k0, k, sigma_phi, sigma_x)
 
