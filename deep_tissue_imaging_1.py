@@ -6,6 +6,8 @@ from deep_tissue_imaging.elementos.plotting import plot_field_intensity, plot_fi
 from deep_tissue_imaging.elementos.tejidos import cerebro_emb_pez_cebra as tejido
 import deep_tissue_imaging.propagators.propagation as prop
 import deep_tissue_imaging.elementos.domain as Domain
+from benchmark.phase_mask_manager import PhaseMaskManager
+from benchmark.medir_psf_params import medir_psf_params
 
 # Parametros de dominio
 
@@ -33,13 +35,20 @@ domain = Domain.Domain(X, Y, Nx, Ny, Nz, dx, dy, dz, np.float32(1e-12), k0, k, s
 phi0 = campo_tem00(X, Y, laser.w0, laser.I_peak)
 # plot_field_intensity(phi0, X, Y)
 
-# Measure execution time of full_step_within_tissue
+# Create a phase mask manager
+mask_manager = PhaseMaskManager(save_dir="./phase_masks")
+
+# Measure execution time of full_propagation_within_tissue
 start_time = time.time()
-# phi1 = prop.full_step_within_tissue(phi0, tejido, domain)
-phi_history = prop.full_propagation_within_tissue(phi0, tejido, domain)
+phi_history = prop.full_propagation_within_tissue(phi0, tejido, domain, mask_manager=mask_manager)
 end_time = time.time()
 execution_time = end_time - start_time
-print(f"Execution time of full_step_within_tissue: {execution_time:.6f} seconds")
+print(f"Execution time: {execution_time:.6f} seconds")
 
-# plot_field_intensity(phi1, X, Y)
+# Measure PSF parameters
+z_positions = np.linspace(0, Lz, Nz+1)
+focal_plane = phi_history[-1]  # Last slice is the focal plane
+psf_params = medir_psf_params(focal_plane, X, Y, phi_history, z_positions, plot=True)
+
+# Plot field intensity history
 plot_field_intensity_history(phi_history, X, Y)
