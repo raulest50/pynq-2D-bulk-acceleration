@@ -1,0 +1,37 @@
+# Fixed-Point Recommendations for Deep Tissue Imaging
+
+## ADI_X
+- Total bits: 32
+- Integer bits: 16
+- Fractional bits: 16
+- SNR: 165.02 dB
+- Recommended type: ap_fixed<32, 16>
+
+## ADI_Y
+- Total bits: 32
+- Integer bits: 16
+- Fractional bits: 16
+- SNR: 164.96 dB
+- Recommended type: ap_fixed<32, 16>
+
+## Nonlinear
+- Total bits: 32
+- Integer bits: 16
+- Fractional bits: 16
+- SNR: 178.11 dB
+- Recommended type: ap_fixed<32, 16>
+
+## LinearAbsorption
+- Total bits: 32
+- Integer bits: 16
+- Fractional bits: 16
+- SNR: 178.11 dB
+- Recommended type: ap_fixed<32, 16>
+
+## TwoPhotonAbsorption
+- Total bits: 32
+- Integer bits: 16
+- Fractional bits: 16
+- SNR: 178.11 dB
+- Recommended type: ap_fixed<32, 16>
+
