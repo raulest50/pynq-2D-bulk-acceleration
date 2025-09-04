@@ -36,12 +36,18 @@ def plot_field_intensity(phi, X, Y):
 
     # Add a colorbar
     cbar = plt.colorbar(im, ax=ax)
-    cbar.set_label('Intensity (W/m²)')
+    cbar.set_label('Intensity (W/m²)', fontsize=16, fontweight='bold')
+    cbar.ax.tick_params(labelsize=14)
+    for lab in cbar.ax.get_yticklabels():
+        lab.set_fontweight('bold')
 
     # Set labels with units in micrometers
-    ax.set_xlabel('X (μm)')
-    ax.set_ylabel('Y (μm)')
-    ax.set_title('Field Intensity (W/m²)')
+    ax.set_xlabel('X (μm)', fontsize=16, fontweight='bold')
+    ax.set_ylabel('Y (μm)', fontsize=16, fontweight='bold')
+    ax.set_title('Field Intensity (W/m²)', fontsize=20, fontweight='bold')
+    ax.tick_params(axis='both', labelsize=14)
+    for lab in ax.get_xticklabels() + ax.get_yticklabels():
+        lab.set_fontweight('bold')
 
     # Make the plot look nice
     plt.tight_layout()
@@ -83,12 +89,18 @@ def plot_field_phase(phi, X, Y):
 
     # Add a colorbar
     cbar = plt.colorbar(im, ax=ax)
-    cbar.set_label('Phase (rad)')
+    cbar.set_label('Phase (rad)', fontsize=16, fontweight='bold')
+    cbar.ax.tick_params(labelsize=14)
+    for lab in cbar.ax.get_yticklabels():
+        lab.set_fontweight('bold')
 
     # Set labels with units in micrometers
-    ax.set_xlabel('X (μm)')
-    ax.set_ylabel('Y (μm)')
-    ax.set_title('Phi1 Field Phase')
+    ax.set_xlabel('X (μm)', fontsize=16, fontweight='bold')
+    ax.set_ylabel('Y (μm)', fontsize=16, fontweight='bold')
+    ax.set_title('Phi1 Field Phase', fontsize=20, fontweight='bold')
+    ax.tick_params(axis='both', labelsize=14)
+    for lab in ax.get_xticklabels() + ax.get_yticklabels():
+        lab.set_fontweight('bold')
 
     # Make the plot look nice
     plt.tight_layout()
@@ -134,12 +146,18 @@ def plot_field_intensity_history(phi_history, X, Y):
 
     # Add a colorbar
     cbar = plt.colorbar(im, ax=ax)
-    cbar.set_label('Intensity (W/m²)')
+    cbar.set_label('Intensity (W/m²)', fontsize=16, fontweight='bold')
+    cbar.ax.tick_params(labelsize=14)
+    for lab in cbar.ax.get_yticklabels():
+        lab.set_fontweight('bold')
 
     # Set labels with units in micrometers
-    ax.set_xlabel('X (μm)')
-    ax.set_ylabel('Y (μm)')
-    ax.set_title(f'Field Intensity (W/m²) - Step 0/{n_steps-1}')
+    ax.set_xlabel('X (μm)', fontsize=16, fontweight='bold')
+    ax.set_ylabel('Y (μm)', fontsize=16, fontweight='bold')
+    ax.set_title(f'Field Intensity (W/m²) - Step 0/{n_steps-1}', fontsize=20, fontweight='bold')
+    ax.tick_params(axis='both', labelsize=14)
+    for lab in ax.get_xticklabels() + ax.get_yticklabels():
+        lab.set_fontweight('bold')
 
     # Create a slider axis
     ax_slider = plt.axes([0.25, 0.1, 0.65, 0.03], facecolor='lightgoldenrodyellow')
@@ -160,7 +178,7 @@ def plot_field_intensity_history(phi_history, X, Y):
         intensity = np.abs(phi_history[step])**2
         im.set_array(intensity.ravel())
         im.set_clim(intensity.min(), intensity.max())
-        ax.set_title(f'Field Intensity (W/m²) - Step {step}/{n_steps-1}')
+        ax.set_title(f'Field Intensity (W/m²) - Step {step}/{n_steps-1}', fontsize=20, fontweight='bold')
         fig.canvas.draw_idle()
 
     # Register the update function with the slider
