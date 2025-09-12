@@ -1,0 +1,12 @@
+{
+  "python": "3.12.11",
+  "numpy": "2.2.6",
+  "os": "Windows 10 (10.0.19045)",
+  "machine": "AMD64",
+  "logical_cpus": 8,
+  "cpu_model": "Intel(R) Core(TM) i7-9700 CPU @ 3.00GHz",
+  "physical_cores": 8,
+  "cpu_max_mhz": 3000,
+  "l2_cache_kb": 2048,
+  "l3_cache_kb": 12288
+}
