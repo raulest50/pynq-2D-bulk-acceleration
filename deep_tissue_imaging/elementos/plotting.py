@@ -184,7 +184,7 @@ def plot_field_intensity_history(phi_history, X, Y):
     # Register the update function with the slider
     slider.on_changed(update)
 
-    # No es necesario tight_layout() cuando se usan ejes personalizados para sliders
+    # tight_layout() is not necessary when using custom axes for sliders
     # plt.tight_layout()  # Removed to avoid warning with custom slider axes
 
     plt.show()

@@ -163,62 +163,62 @@ def adi_y(phi, Nx, eps, k, dz, dy):
     return phi_inter
 
 
-## Operador N - Kerr
+## N Operator - Kerr
 
 def half_nonlinear(phi, k_sample, n2_sample, dz):
    phase = np.exp(np.complex64(1j * k_sample * n2_sample * dz/2 * np.abs(phi)**2))
    return phase * phi
 
 
-## Operadores de absorcion
+## Absorption operators
 
-# absorcion lineal
+# linear absorption
 def half_linear_absorption(phi, alpha, dz):
    return np.exp(np.float32(-alpha * dz/4)) * phi
 
-# absorcion de 2 fotones
+# two-photon absorption
 def half_2photon_absorption(phi, beta, dz):
    return np.exp(np.float32(-beta * dz/4 * np.abs(phi)**2)) * phi
 
 
-## Mascara de fase aleatoria
+## Random phase mask
 
 def aplicar_mascara_fase_aleatoria(phi, X, Y, desviacion_fase=0.3, correlacion_m=5e-6, semilla=None):
     """
-    Aplica una máscara de fase aleatoria suave al campo complejo phi.
+    Applies a smooth random phase mask to the complex field phi.
 
-    Parámetros:
-        phi (ndarray): campo complejo original (E o phi).
-        X, Y (ndarray): mallas espaciales 2D (en metros).
-        desviacion_fase (float): desviación estándar de la fase en radianes.
-        correlacion_m (float): longitud de correlación espacial en metros.
-        semilla (int, opcional): semilla para reproducibilidad.
+    Parameters:
+        phi (ndarray): original complex field (E or phi).
+        X, Y (ndarray): 2D spatial meshgrids (in meters).
+        desviacion_fase (float): standard deviation of the phase in radians.
+        correlacion_m (float): spatial correlation length in meters.
+        semilla (int, optional): seed for reproducibility.
 
-    Retorna:
-        ndarray: campo complejo phi con fase aleatoria aplicada.
+    Returns:
+        ndarray: complex field phi with applied random phase.
     """
     if semilla is not None:
         np.random.seed(semilla)
 
     shape = X.shape
 
-    # Calcular dx y dy a partir de las mallas (en metros)
-    dx = np.float32(np.abs(X[0, 1] - X[0, 0]))  # metros
-    dy = np.float32(np.abs(Y[1, 0] - Y[0, 0]))  # metros
+    # Calculate dx and dy from the meshgrids (in meters)
+    dx = np.float32(np.abs(X[0, 1] - X[0, 0]))  # meters
+    dy = np.float32(np.abs(Y[1, 0] - Y[0, 0]))  # meters
 
-    # Longitud de correlación en número de píxeles
+    # Correlation length in number of pixels
     sigma_x = np.float32(correlacion_m / dx)
     sigma_y = np.float32(correlacion_m / dy)
 
-    # Ruido gaussiano con desviación deseada
+    # Gaussian noise with desired deviation
     ruido = np.random.normal(loc=0.0, scale=desviacion_fase, size=shape).astype(np.float32)
 
-    # Suavizado para imitar fluctuación estructural
+    # Smoothing to mimic structural fluctuation
     theta = gaussian_filter(ruido, sigma=(sigma_y, sigma_x), mode='reflect')
     mf = np.exp(np.complex64(1j * theta))
     # plot_field_intensity(np.real(mf), X, Y)
 
-    # Aplicar la fase aleatoria como exponente complejo
+    # Apply the random phase as a complex exponential
     phi_modulado = phi * mf
 
     return phi_modulado

@@ -25,7 +25,7 @@ from benchmark.system_info import print_system_info
 
 def save_beam_profile(phi, X, Y, title, filename,
                       fs_title=20, fs_labels=16, fs_ticks=14):
-    """Guarda un mapa de intensidad |phi|^2 con estilo mejorado en PNG."""
+    """Saves an intensity map |phi|^2 with improved style in PNG format."""
     X_um, Y_um = X * 1e6, Y * 1e6
     intensity = np.abs(phi) ** 2
 
@@ -33,13 +33,13 @@ def save_beam_profile(phi, X, Y, title, filename,
     im = ax.pcolormesh(X_um, Y_um, intensity, cmap='viridis', shading='auto')
     cbar = plt.colorbar(im, ax=ax)
 
-    # Etiquetas en negrilla y más grandes
+    # Bold and larger labels
     ax.set_title(title, fontsize=fs_title, fontweight='bold')
     ax.set_xlabel('X (μm)', fontsize=fs_labels, fontweight='bold')
     ax.set_ylabel('Y (μm)', fontsize=fs_labels, fontweight='bold')
-    cbar.set_label('Intensidad (W/m²)', fontsize=fs_labels, fontweight='bold')
+    cbar.set_label('Intensity (W/m²)', fontsize=fs_labels, fontweight='bold')
 
-    # Ticks más legibles y en negrilla
+    # More readable and bold ticks
     ax.tick_params(axis='both', labelsize=fs_ticks)
     for lab in ax.get_xticklabels() + ax.get_yticklabels():
         lab.set_fontweight('bold')
@@ -91,9 +91,9 @@ end_time = time.time()
 execution_time = end_time - start_time
 print(f"Execution time: {execution_time:.6f} seconds")
 
-# Guardar perfil inicial (paso 0) y final (paso Nz)
-save_beam_profile(phi_history[0], X, Y, 'Perfil de haz inicial (Paso 0)', 'beam_inicial.png')
-save_beam_profile(phi_history[-1], X, Y, f'Perfil de haz final (Paso {Nz})', 'beam_final.png')
+# Save initial (step 0) and final (step Nz) beam profiles
+save_beam_profile(phi_history[0], X, Y, 'Initial Beam Profile (Step 0)', 'beam_initial.png')
+save_beam_profile(phi_history[-1], X, Y, f'Final Beam Profile (Step {Nz})', 'beam_final.png')
 
 # Measure PSF parameters
 z_positions = np.linspace(0, Lz, Nz+1)

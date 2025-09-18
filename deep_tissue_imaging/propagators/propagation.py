@@ -4,12 +4,12 @@ import deep_tissue_imaging.propagators.step_operators as so
 def full_step_within_tissue(phi, tejido, d):
     phi = so.adi_x(phi, d.Ny, d.eps, d.k, d.dz, d.dx)
     phi = so.half_2photon_absorption(phi, tejido.beta, d.dz)
-    phi = so.half_nonlinear(phi, d.k, tejido.n2, d.dz)
+    # phi = so.half_nonlinear(phi, d.k, tejido.n2, d.dz)  # Kerr effect disabled temporarily
     phi = so.half_linear_absorption(phi, tejido.alpha, d.dz)
 
     phi = so.adi_y(phi, d.Nx, d.eps, d.k, d.dz, d.dy)
     phi = so.half_2photon_absorption(phi, tejido.beta, d.dz)
-    phi = so.half_nonlinear(phi, d.k, tejido.n2, d.dz)
+    # phi = so.half_nonlinear(phi, d.k, tejido.n2, d.dz)  # Kerr effect disabled temporarily
     phi = so.half_linear_absorption(phi, tejido.alpha, d.dz)
     return phi
 
@@ -46,11 +46,11 @@ def full_propagation_within_tissue(phi, tejido, d, mask_manager=None):
             if mask_manager is not None:
                 # Use the mask manager with the current mask index
                 phi = mask_manager.apply_mask(phi, mask_counter)
-                print(f"aplicada mascara aleatoria {mask_counter} en z = {k}")
+                print(f"applied random mask {mask_counter} at z = {k}")
             else:
                 # Use the original function if no mask manager is provided
                 phi = so.aplicar_mascara_fase_aleatoria(phi, d.X, d.Y, d.sigma_phi, d.sigma_x)
-                print(f"aplicada mascara aleatoria en z = {k}")
+                print(f"applied random mask at z = {k}")
 
         phi_history[k + 1] = phi
 
