@@ -2,6 +2,10 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import json
+import datetime
+import os
+from pathlib import Path
 
 # Estilo global más legible (no afecta tiempos de cómputo)
 mpl.rcParams.update({
@@ -20,7 +24,97 @@ import deep_tissue_imaging.propagators.propagation as prop
 import deep_tissue_imaging.elementos.domain as Domain
 from benchmark.phase_mask_manager import PhaseMaskManager
 from benchmark.medir_psf_params import medir_psf_params
-from benchmark.system_info import print_system_info
+from benchmark.system_info import print_system_info, collect_system_info
+
+
+def save_performance_data(execution_time, domain, psf_params, output_dir="./performance_data"):
+    """
+    Save comprehensive performance data including execution time, system info,
+    simulation parameters, and PSF measurements.
+
+    Parameters:
+        execution_time (float): Execution time in seconds
+        domain (Domain): Domain object containing simulation parameters
+        psf_params (dict): PSF parameters measured by medir_psf_params
+        output_dir (str): Directory to save performance data
+    """
+    # Create output directory if it doesn't exist
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+    # Generate timestamp for the filename
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"performance_{timestamp}.json"
+    filepath = os.path.join(output_dir, filename)
+
+    # Get system information
+    system_info = collect_system_info()
+
+    # Collect domain parameters
+    domain_params = {
+        "Lx": float(domain.X.shape[1] * domain.dx),
+        "Ly": float(domain.X.shape[0] * domain.dy),
+        "Lz": float(domain.Nz * domain.dz),
+        "Nx": int(domain.Nx),
+        "Ny": int(domain.Ny),
+        "Nz": int(domain.Nz),
+        "dx": float(domain.dx),
+        "dy": float(domain.dy),
+        "dz": float(domain.dz),
+        "dt": float(domain.eps),
+        "k0": float(domain.k0),
+        "k": float(domain.k),
+        "sigma_phi": float(domain.sigma_phi),
+        "sigma_x": float(domain.sigma_x)
+    }
+
+    # Collect laser parameters
+    laser_params = {
+        "wavelength": float(laser.wavelength),
+        "w0": float(laser.w0),
+        "I_peak": float(laser.I_peak)
+    }
+
+    # Collect tissue parameters
+    tissue_params = {
+        "n_0": float(tejido.n_0),
+        "Dn": float(tejido.Dn),
+        "l_s": float(tejido.l_s),
+        "alpha": float(tejido.alpha) if hasattr(tejido, 'alpha') else None,
+        "beta": float(tejido.beta) if hasattr(tejido, 'beta') else None,
+        "n2": float(tejido.n2) if hasattr(tejido, 'n2') else None
+    }
+
+    # Format PSF parameters for JSON serialization
+    formatted_psf_params = {}
+    for key, value in psf_params.items():
+        if key == 'energia_encerrada':
+            formatted_psf_params[key] = {str(float(k)): float(v) for k, v in value.items()}
+        elif key == 'sidelobes':
+            formatted_psf_params[key] = {
+                'max_sidelobe_ratio': float(value['max_sidelobe_ratio']),
+                'horizontal_sidelobes': [[int(pos), float(level)] for pos, level in value['horizontal_sidelobes']],
+                'vertical_sidelobes': [[int(pos), float(level)] for pos, level in value['vertical_sidelobes']]
+            }
+        elif value is not None:
+            formatted_psf_params[key] = float(value)
+
+    # Compile all data
+    performance_data = {
+        "timestamp": timestamp,
+        "execution_time_seconds": execution_time,
+        "system_info": system_info,
+        "domain_parameters": domain_params,
+        "laser_parameters": laser_params,
+        "tissue_parameters": tissue_params,
+        "psf_parameters": formatted_psf_params
+    }
+
+    # Save to JSON file
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(performance_data, f, indent=2, ensure_ascii=False)
+
+    print(f"\nPerformance data saved to: {filepath}")
+    return filepath
 
 
 def save_beam_profile(phi, X, Y, title, filename,
@@ -99,6 +193,9 @@ save_beam_profile(phi_history[-1], X, Y, f'Final Beam Profile (Step {Nz})', 'bea
 z_positions = np.linspace(0, Lz, Nz+1)
 focal_plane = phi_history[-1]  # Last slice is the focal plane
 psf_params = medir_psf_params(focal_plane, X, Y, phi_history, z_positions, plot=True)
+
+# Save performance data
+save_performance_data(execution_time, domain, psf_params)
 
 # Plot field intensity history
 plot_field_intensity_history(phi_history, X, Y)
