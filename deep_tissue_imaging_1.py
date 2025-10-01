@@ -153,7 +153,7 @@ Nz = 361
 dz = np.float32(Lz / Nz)  # 1um
 
 Lx, Ly = np.float32(45e-6), np.float32(45e-6)  # 45um x 45um
-Nx, Ny = 32, 32
+Nx, Ny = 64, 64
 dx = np.float32(Lx / Nx)  # 0.35um
 dy = np.float32(Ly / Ny)  # 0.35um
 

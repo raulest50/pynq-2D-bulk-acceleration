@@ -1,0 +1,53 @@
+hpcpu1: 
+
+PS C:\Xilinx\Others\pynq-2D-bulk-acceleration> poetry run python .\deep_tissue_imaging_1.py
+CPU/Plataforma (resumen para paper):  Intel(R) Xeon(R) w3-2425 | 6C/12T | max 3000.0 MHz | 127.25 GB RAM | Windows 11 (10.0.26100) | Python 3.13.7 | NumPy 2.2.6
+-- CPU/Platform details --
+CPU model: Intel(R) Xeon(R) w3-2425
+Physical cores: 6
+Logical CPUs: 12
+Max clock (MHz): 3000.0
+L2 cache (KB): 12288
+L3 cache (KB): 15360
+RAM (GB): 127.25
+Machine: AMD64
+OS: Windows 11 (10.0.26100)
+Python: 3.13.7
+NumPy: 2.2.6
+Initializing phase masks...
+  Initializing mask 1...
+Warning: Saved mask shape (32, 32) doesn't match required shape (64, 64). Regenerating.
+  Initializing mask 2...
+Warning: Saved mask shape (32, 32) doesn't match required shape (64, 64). Regenerating.
+  Initializing mask 3...
+Warning: Saved mask shape (32, 32) doesn't match required shape (64, 64). Regenerating.
+applied random mask 1 at z = 120
+applied random mask 2 at z = 240
+applied random mask 3 at z = 360
+Execution time: 4.202998 seconds
+Warning: Could not find two crossings of the threshold. Estimating from simulation bounds.
+
+=== PSF Parameters ===
+FWHM Lateral: 18.38 µm
+FWHM Axial: 66.00 µm
+
+Radius containing 80% of energy: 24.10 µm
+
+Encircled Energy:
+  Radius 9.19 µm: 26.8%
+  Radius 18.38 µm: 61.4%
+  Radius 27.57 µm: 89.3%
+
+Max Sidelobe Level: 0.0% of peak
+
+Performance data saved to: ./performance_data\performance_20251001_110459.json
+PS C:\Xilinx\Others\pynq-2D-bulk-acceleration
+
+
+hpcpu2:
+
+
+
+wscpu:
+
+

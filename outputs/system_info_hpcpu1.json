@@ -1,0 +1,13 @@
+{
+  "python": "3.13.7",
+  "numpy": "2.2.6",
+  "os": "Windows 11 (10.0.26100)",
+  "machine": "AMD64",
+  "logical_cpus": 12,
+  "physical_cores": 6,
+  "cpu_max_mhz": 3000.0,
+  "ram_gb": 127.25,
+  "cpu_model": "Intel(R) Xeon(R) w3-2425",
+  "l2_cache_kb": 12288,
+  "l3_cache_kb": 15360
+}
